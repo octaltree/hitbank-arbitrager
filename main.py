@@ -50,12 +50,12 @@ def attemptTrade(inited, capacity, value):
     else:
         loop = asyncio.get_event_loop()
         cap = loop.run_until_complete(asyncio.gather(
-            loop.run_in_executor(None, balance, inited, 'hitbtc2'),
-            loop.run_in_executor(None, balance, inited, 'bitbank')))
+            loop.run_in_executor(None, fetchCapacity, inited, 'hitbtc2'),
+            loop.run_in_executor(None, fetchCapacity, inited, 'bitbank')))
         return cap
 
 
-def balance(dic, ident):
+def fetchCapacity(dic, ident):
     """余力取得."""
     return dic[ident].fetch_balance()['free']
 
