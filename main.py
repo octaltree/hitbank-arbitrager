@@ -16,7 +16,6 @@ def main() -> int:
         try:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
-            print(capacity)
             value = fetchValue(inited)
             capacity = attemptTrade(inited, capacity, value)
             time.sleep(3)
@@ -37,9 +36,7 @@ def init():
     bitbank = ccxt.bitbank({
         'apiKey': os.environ.get('bitbank_key'),
         'secret': os.environ.get('bitbank_secret')})
-    return {
-        'hitbtc2': hitbtc2,
-        'bitbank': bitbank}
+    return {'hitbtc2': hitbtc2, 'bitbank': bitbank}
 
 
 def attemptTrade(inited, capacity, value):
@@ -48,11 +45,11 @@ def attemptTrade(inited, capacity, value):
     if doTrade:
         pass
     else:
-        loop = asyncio.get_event_loop()
-        cap = loop.run_until_complete(asyncio.gather(
-            loop.run_in_executor(None, fetchCapacity, inited, 'hitbtc2'),
-            loop.run_in_executor(None, fetchCapacity, inited, 'bitbank')))
-        return cap
+        el = asyncio.get_event_loop()
+        cap = el.run_until_complete(asyncio.gather(
+            el.run_in_executor(None, fetchCapacity, inited, 'hitbtc2'),
+            el.run_in_executor(None, fetchCapacity, inited, 'bitbank')))
+        return {'hitbtc2': cap[0], 'bitbank': cap[1]}
 
 
 def fetchCapacity(dic, ident):
@@ -62,7 +59,15 @@ def fetchCapacity(dic, ident):
 
 def fetchValue(inited):
     """価格取得."""
-    pass
+    el = asyncio.get_event_loop()
+    f = lambda dic, ident, symbol: dic[ident].fetch_order_book(symbol)
+    val = el.run_until_complete(asyncio.gather(
+        el.run_in_executor(None, f, inited, 'hitbtc2', 'XRP/BTC'),
+        el.run_in_executor(None, f, inited, 'bitbank', 'XRP/JPY'),
+        el.run_in_executor(None, f, inited, 'bitbank', 'BTC/JPY')))
+    return {
+        'hitbtc2': {'XRP/BTC': val[0]},
+        'bitbank': {'XRP/JPY': val[1], 'BTC/JPY': val[2]}}
 
 
 if __name__ == "__main__":
