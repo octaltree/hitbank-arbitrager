@@ -3,7 +3,7 @@
 import os
 import os.path
 import dotenv
-import ccxt
+import ccxt.async as ccxt
 import time
 import asyncio
 
@@ -41,8 +41,8 @@ def init():
 
 def attemptTrade(inited, capacity, value):
     """判断 トレード 余力取得."""
+    production = False
     try:
-        production = False
         print(value)
         doTrade = False
         if doTrade:
@@ -56,18 +56,13 @@ def attemptTrade(inited, capacity, value):
     if updateCap:
         el = asyncio.get_event_loop()
         cap = el.run_until_complete(asyncio.gather(
-            el.run_in_executor(None, fetchCapacity, inited, 'hitbtc2'),
-            el.run_in_executor(None, fetchCapacity, inited, 'bitbank')))
-        newCap = {'hitbtc2': cap[0], 'bitbank': cap[1]}
+            inited['hitbtc2'].fetch_balance(),
+            inited['bitbank'].fetch_balance()))
+        newCap = {'hitbtc2': cap[0]['free'], 'bitbank': cap[1]['free']}
         print(newCap)
         return newCap
     else:
         return capacity
-
-
-def fetchCapacity(dic, ident):
-    """余力取得."""
-    return dic[ident].fetch_balance()['free']
 
 
 def fetchValue(inited):
@@ -76,9 +71,9 @@ def fetchValue(inited):
         return dic[ident].fetch_order_book(symbol)
     el = asyncio.get_event_loop()
     val = el.run_until_complete(asyncio.gather(
-        el.run_in_executor(None, f, inited, 'hitbtc2', 'XRP/BTC'),
-        el.run_in_executor(None, f, inited, 'bitbank', 'XRP/JPY'),
-        el.run_in_executor(None, f, inited, 'bitbank', 'BTC/JPY')))
+        inited['hitbtc2'].fetch_order_book('XRP/BTC'),
+        inited['bitbank'].fetch_order_book('XRP/JPY'),
+        inited['bitbank'].fetch_order_book('BTC/JPY')))
     newVal = {
         'hitbtc2': {'XRP/BTC': val[0]},
         'bitbank': {'XRP/JPY': val[1], 'BTC/JPY': val[2]}}
