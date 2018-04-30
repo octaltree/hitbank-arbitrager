@@ -11,7 +11,7 @@ import asyncio
 def main() -> int:
     """main."""
     inited = init()
-    capacity = {}
+    capacity = None
     while True:
         try:
             # bitbank ETH JP
@@ -41,15 +41,28 @@ def init():
 
 def attemptTrade(inited, capacity, value):
     """判断 トレード 余力取得."""
-    doTrade = False
-    if doTrade:
+    try:
+        production = False
+        print(value)
+        doTrade = False
+        if doTrade:
+            print('trade')
+            if production:
+                # order
+                pass
+    except Exception:
         pass
-    else:
+    updateCap = capacity is None or doTrade
+    if updateCap:
         el = asyncio.get_event_loop()
         cap = el.run_until_complete(asyncio.gather(
             el.run_in_executor(None, fetchCapacity, inited, 'hitbtc2'),
             el.run_in_executor(None, fetchCapacity, inited, 'bitbank')))
-        return {'hitbtc2': cap[0], 'bitbank': cap[1]}
+        newCap = {'hitbtc2': cap[0], 'bitbank': cap[1]}
+        print(newCap)
+        return newCap
+    else:
+        return capacity
 
 
 def fetchCapacity(dic, ident):
@@ -59,15 +72,17 @@ def fetchCapacity(dic, ident):
 
 def fetchValue(inited):
     """価格取得."""
+    def f(dic, ident, symbol):
+        return dic[ident].fetch_order_book(symbol)
     el = asyncio.get_event_loop()
-    f = lambda dic, ident, symbol: dic[ident].fetch_order_book(symbol)
     val = el.run_until_complete(asyncio.gather(
         el.run_in_executor(None, f, inited, 'hitbtc2', 'XRP/BTC'),
         el.run_in_executor(None, f, inited, 'bitbank', 'XRP/JPY'),
         el.run_in_executor(None, f, inited, 'bitbank', 'BTC/JPY')))
-    return {
+    newVal = {
         'hitbtc2': {'XRP/BTC': val[0]},
         'bitbank': {'XRP/JPY': val[1], 'BTC/JPY': val[2]}}
+    return newVal
 
 
 if __name__ == "__main__":
