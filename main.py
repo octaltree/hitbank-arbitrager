@@ -64,6 +64,11 @@ def attemptTrade(inited, capacity, value):
         bitbankBtc = {
             'asks': np.array(value['bitbank']['BTC/JPY']['asks']),
             'bids': np.array(value['bitbank']['BTC/JPY']['bids'])}
+        bitbankJpy = {
+            'asks': np.array([[1/x[0], x[1]]
+                for x in value['bitbank']['BTC/JPY']['bids']]),
+            'bids': np.array([[1/x[0], x[1]]
+                for x in value['bitbank']['BTC/JPY']['asks']])}
 
         print(hitbtc2['asks'][0])
         print(hitbtc2['bids'][0])
@@ -76,9 +81,9 @@ def attemptTrade(inited, capacity, value):
         print(hitbtc2['bids'][0] / (bitbankXrp['asks'][0] / bitbankBtc['bids'][0]))
         print((bitbankXrp['bids'][0] / bitbankBtc['asks'][0]) / hitbtc2['asks'][0])
 
-        #(ratioD, valD) = root_d(bitbankBtc['bids'], bitbankXrp['asks'], hitbtc2['bids'], 1.002)
-        #(ratioU, valU) = root_u(bitbankXrp['bids'], bitbankBtc['asks'], hitbtc2['asks'], 1.002)
-        #print((ratioD, valD, ratioU, valU))
+        (ratioD, valD) = root_d(bitbankJpy['bids'], bitbankXrp['bids'], hitbtc2['asks'], 1.002)
+        (ratioU, valU) = root_u(bitbankJpy['asks'], bitbankXrp['asks'], hitbtc2['bids'], 1.002)
+        print((ratioD, valD, ratioU, valU))
 
         # hitbtc2のXRP/BTCとbitbankのXRP/BTC(XRP/JPY / BTC/JPY)
         # 閾値を越える取引可能量を板から推測する
@@ -161,6 +166,7 @@ def root_u(ask1, ask2, bid3, threshold):
     amount3 = np.cumsum(bid3[:, 1])
 
     ratio = bid3[:, 0][idx[2]]/(ask1[:, 0][idx[0]]* ask2[:, 0][idx[1]])
+    print(ratio)
     if ratio < threshold:
         return 0, 0
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
@@ -184,6 +190,7 @@ def root_d(bid1, bid2, ask3, threshold):
     amount3 = np.cumsum(ask3[:, 1])
 
     ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]]/ask3[:, 0][idx[2]]
+    print(ratio)
     if ratio < threshold:
         return 0, 0
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
