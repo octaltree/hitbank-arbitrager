@@ -61,29 +61,23 @@ def attemptTrade(inited, capacity, value):
         bitbankXrp = {
             'asks': np.array(value['bitbank']['XRP/JPY']['asks']),
             'bids': np.array(value['bitbank']['XRP/JPY']['bids'])}
-        bitbankBtc = {
-            'asks': np.array(value['bitbank']['BTC/JPY']['asks']),
-            'bids': np.array(value['bitbank']['BTC/JPY']['bids'])}
         bitbankJpy = {
-            'asks': np.array([[1/x[0], x[1]]
+            'asks': np.array([
+                [1 / x[0], x[1]]
                 for x in value['bitbank']['BTC/JPY']['bids']]),
-            'bids': np.array([[1/x[0], x[1]]
+            'bids': np.array([
+                [1 / x[0], x[1]]
                 for x in value['bitbank']['BTC/JPY']['asks']])}
 
-        print(hitbtc2['asks'][0])
-        print(hitbtc2['bids'][0])
-        print(bitbankXrp['asks'][0])
-        print(bitbankXrp['bids'][0])
-        print(bitbankBtc['asks'][0])
-        print(bitbankBtc['bids'][0])
-        print(bitbankXrp['bids'][0] / bitbankBtc['asks'][0])
-        print(bitbankXrp['asks'][0] / bitbankBtc['bids'][0])
-        print(hitbtc2['bids'][0] / (bitbankXrp['asks'][0] / bitbankBtc['bids'][0]))
-        print((bitbankXrp['bids'][0] / bitbankBtc['asks'][0]) / hitbtc2['asks'][0])
-
-        (ratioD, valD) = root_d(bitbankJpy['bids'], bitbankXrp['bids'], hitbtc2['asks'], 1.002)
-        (ratioU, valU) = root_u(bitbankJpy['asks'], bitbankXrp['asks'], hitbtc2['bids'], 1.002)
-        print((ratioD, valD, ratioU, valU))
+        (ratioS, valS) = calcSellingTwice(
+            bitbankJpy['bids'],
+            bitbankXrp['bids'],
+            hitbtc2['asks'], 1.002)
+        (ratioB, valB) = calcBuyingTwice(
+            bitbankJpy['asks'],
+            bitbankXrp['asks'],
+            hitbtc2['bids'], 1.002)
+        print((ratioS, valS, ratioB, valB))
 
         # hitbtc2のXRP/BTCとbitbankのXRP/BTC(XRP/JPY / BTC/JPY)
         # 閾値を越える取引可能量を板から推測する
@@ -156,48 +150,48 @@ def attemptTrade(inited, capacity, value):
         print_exc()
     return fetchCapacity(inited)
 
-# BASE1→BASE2→ALT→BASE1 のルート
-# 期待収益率が閾値を超えてたら(期待利益率, 量（ALT単位）)を、超えてなかったら(0, 0)を返す
-def root_u(ask1, ask2, bid3, threshold):
+
+# 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
+def calcBuyingTwice(ask1, ask2, bid3, threshold):
+    """ALT -> BASE1がBASE1 -> BASE2 -> ALTを上回れば(比率, 量)を返す. """
     idx = np.zeros(3).astype(int)
 
     amount1 = np.cumsum(ask1[:, 1] * ask2[-1][0])
     amount2 = np.cumsum(ask2[:, 1])
     amount3 = np.cumsum(bid3[:, 1])
 
-    ratio = bid3[:, 0][idx[2]]/(ask1[:, 0][idx[0]]* ask2[:, 0][idx[1]])
-    print(ratio)
+    ratio = bid3[:, 0][idx[2]] / (ask1[:, 0][idx[0]] * ask2[:, 0][idx[1]])
     if ratio < threshold:
-        return 0, 0
+        return (ratio, 0)
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
 
     for i in range(10):
         idx[np.argmin([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
-        new_ratio = bid3[:, 0][idx[2]]/(ask1[:, 0][idx[0]]* ask2[:, 0][idx[1]])
+        new_ratio = bid3[:, 0][idx[2]] / (ask1[:, 0][idx[0]] * ask2[:, 0][idx[1]])
         if new_ratio < threshold:
             break
         ratio = new_ratio
         value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
     return ratio, value
 
-# BASE1→ALT→BASE2→BASE1 のルート
-# 期待収益率が閾値を超えてたら(期待利益率, 量（ALT単位）)を、超えてなかったら(0, 0)を返す
-def root_d(bid1, bid2, ask3, threshold):
+
+def calcSellingTwice(bid1, bid2, ask3, threshold):
+    """ALT -> BASE2 -> BASE1がBASE1 -> ALTを上回れば(比率, 量)を返す."""
     idx = np.zeros(3).astype(int)
 
     amount1 = np.cumsum(bid1[:, 1] * bid2[-1][0])
     amount2 = np.cumsum(bid2[:, 1])
     amount3 = np.cumsum(ask3[:, 1])
 
-    ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]]/ask3[:, 0][idx[2]]
+    ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]] / ask3[:, 0][idx[2]]
     print(ratio)
     if ratio < threshold:
-        return 0, 0
+        return (ratio, 0)
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
 
     for i in range(10):
         idx[np.argmin([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
-        new_ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]]/ask3[:, 0][idx[2]]
+        new_ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]] / ask3[:, 0][idx[2]]
         if new_ratio < threshold:
             break
         ratio = new_ratio
