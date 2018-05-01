@@ -8,7 +8,6 @@ import time
 import asyncio
 import numpy as np
 from traceback import print_exc
-from functools import reduce
 
 
 def main() -> int:
@@ -79,65 +78,7 @@ def attemptTrade(inited, capacity, value):
             hitbtc2['bids'], 1.002)
         print((ratioS, valS, ratioB, valB))
 
-        # hitbtc2のXRP/BTCとbitbankのXRP/BTC(XRP/JPY / BTC/JPY)
-        # 閾値を越える取引可能量を板から推測する
-
-        #cum_down1 = np.vstack([np.cumsum(depth1["asks"][:, 1][:n_depth]), np.zeros(n_depth)])
-        #cum_down2 = np.vstack([np.cumsum(depth2["bids"][:, 1][:n_depth]), np.ones(n_depth)])
-        #cum_down = np.hstack((cum_down1, cum_down2))
-        #sorder_down = cum_down[1][np.argsort(cum_down[0])][:n_depth]
-        #print(sorder_down)
-
-        #cum_up1 = np.vstack([np.cumsum(depth1["bids"][:, 1][:n_depth]), np.ones(n_depth)])
-        #cum_up2 = np.vstack([np.cumsum(depth2["asks"][:, 1][:n_depth]), np.zeros(n_depth)]) # (2, depth)
-        #cum_up = np.hstack((cum_up1, cum_up2)) # (2, depth * 2)
-        #sorder_up = cum_up[1][np.argsort(cum_up[0])][:n_depth] # (depth,) 価格順でbidかaskかのフラグ
-        #print(sorder_up)
-
-        ## 注文額の比率が インデックスで対応するの???
-        #i1, i2 = 0, 0
-        #ratelist_up = np.zeros((n_depth,2))
-        #for si in range(n_depth):
-        #    so = sorder_up[si]
-        #    if so == 0:
-        #        ratelist_up[si] = depth1["bids"][i1][0]/depth2["asks"][i2][0], cum_up2[0][i2]
-        #        i2 +=1
-        #    if so == 1:
-        #        ratelist_up[si] = depth1["bids"][i1][0]/depth2["asks"][i2][0], cum_up1[0][i1]
-        #        i1 +=1
-        #print(ratelist_up)
-
-        #i1, i2= 0, 0
-        #ratelist_down = np.zeros((n_depth,2))
-        #for si in range(n_depth):
-        #    so = sorder_down[si]
-        #    if so == 0:
-        #        ratelist_down[si] = depth2["bids"][i2][0]/depth1["asks"][i1][0], cum_down1[0][i1]
-        #        i1 +=1
-        #    if so == 1:
-        #        ratelist_down[si] = depth2["bids"][i2][0]/depth1["asks"][i1][0], cum_down2[0][i2]
-        #        i2 +=1
-        #print(ratelist_down)
-        #u_idx = np.sum(ratelist_up[:, 0] >= thrd_up) # しきい値を超えたrateの個数
-        #d_idx = np.sum(ratelist_down[:, 0] >= thrd_down)
-
-        #tradeflag = np.sign(u_idx) - np.sign(d_idx)
-
-        #if (depth1["asks"][0][0] < depth1["bids"][0][0]):
-        #    tradeflag = 0
-        #    print("invalid orderbook in {}, ask={}, bid={}".format(self.t1.name, depth1["asks"][0][0], depth1["bids"][0][0]))
-        #if (depth2["asks"][0][0] < depth2["bids"][0][0]):
-        #    tradeflag = 0
-        #    print("invalid orderbook in {}, ask={}, bid={}".format(self.t2.name, depth2["asks"][0][0], depth2["bids"][0][0]))
-
-        #if tradeflag == 0:
-        #    tradable_value = 0
-        #if tradeflag == 1:
-        #    tradable_value = ratelist_up[u_idx -1][1]
-        #if tradeflag == -1:
-        #    tradable_value = ratelist_down[d_idx -1][1]
-
-        doTrade = False
+        doTrade = ratioS >= 1.002 or ratioB >= 1.002
         if doTrade:
             print('trade')
             if production:
@@ -153,7 +94,7 @@ def attemptTrade(inited, capacity, value):
 
 # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
 def calcBuyingTwice(ask1, ask2, bid3, threshold):
-    """ALT -> BASE1がBASE1 -> BASE2 -> ALTを上回れば(比率, 量)を返す. """
+    """ALT -> BASE1がBASE1 -> BASE2 -> ALTを上回れば(比率, 量)を返す."""
     idx = np.zeros(3).astype(int)
 
     amount1 = np.cumsum(ask1[:, 1] * ask2[-1][0])
@@ -166,8 +107,10 @@ def calcBuyingTwice(ask1, ask2, bid3, threshold):
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
 
     for i in range(10):
-        idx[np.argmin([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
-        new_ratio = bid3[:, 0][idx[2]] / (ask1[:, 0][idx[0]] * ask2[:, 0][idx[1]])
+        idx[np.argmin([
+            amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
+        new_ratio = (
+            bid3[:, 0][idx[2]] / (ask1[:, 0][idx[0]] * ask2[:, 0][idx[1]]))
         if new_ratio < threshold:
             break
         ratio = new_ratio
@@ -184,14 +127,15 @@ def calcSellingTwice(bid1, bid2, ask3, threshold):
     amount3 = np.cumsum(ask3[:, 1])
 
     ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]] / ask3[:, 0][idx[2]]
-    print(ratio)
     if ratio < threshold:
         return (ratio, 0)
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
 
     for i in range(10):
-        idx[np.argmin([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
-        new_ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]] / ask3[:, 0][idx[2]]
+        idx[np.argmin([
+            amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
+        new_ratio = (
+            bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]] / ask3[:, 0][idx[2]])
         if new_ratio < threshold:
             break
         ratio = new_ratio
