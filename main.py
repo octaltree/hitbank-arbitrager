@@ -65,9 +65,20 @@ def attemptTrade(inited, capacity, value):
             'asks': np.array(value['bitbank']['BTC/JPY']['asks']),
             'bids': np.array(value['bitbank']['BTC/JPY']['bids'])}
 
-        depth = min([
-            min(len(x['asks']), len(x['bids']))
-            for x in [hitbtc2, bitbankXrp, bitbankBtc]])
+        print(hitbtc2['asks'][0])
+        print(hitbtc2['bids'][0])
+        print(bitbankXrp['asks'][0])
+        print(bitbankXrp['bids'][0])
+        print(bitbankBtc['asks'][0])
+        print(bitbankBtc['bids'][0])
+        print(bitbankXrp['bids'][0] / bitbankBtc['asks'][0])
+        print(bitbankXrp['asks'][0] / bitbankBtc['bids'][0])
+        print(hitbtc2['bids'][0] / (bitbankXrp['asks'][0] / bitbankBtc['bids'][0]))
+        print((bitbankXrp['bids'][0] / bitbankBtc['asks'][0]) / hitbtc2['asks'][0])
+
+        #(ratioD, valD) = root_d(bitbankBtc['bids'], bitbankXrp['asks'], hitbtc2['bids'], 1.002)
+        #(ratioU, valU) = root_u(bitbankXrp['bids'], bitbankBtc['asks'], hitbtc2['asks'], 1.002)
+        #print((ratioD, valD, ratioU, valU))
 
         # hitbtc2のXRP/BTCとbitbankのXRP/BTC(XRP/JPY / BTC/JPY)
         # 閾値を越える取引可能量を板から推測する
@@ -140,6 +151,52 @@ def attemptTrade(inited, capacity, value):
         print_exc()
     return fetchCapacity(inited)
 
+# BASE1→BASE2→ALT→BASE1 のルート
+# 期待収益率が閾値を超えてたら(期待利益率, 量（ALT単位）)を、超えてなかったら(0, 0)を返す
+def root_u(ask1, ask2, bid3, threshold):
+    idx = np.zeros(3).astype(int)
+
+    amount1 = np.cumsum(ask1[:, 1] * ask2[-1][0])
+    amount2 = np.cumsum(ask2[:, 1])
+    amount3 = np.cumsum(bid3[:, 1])
+
+    ratio = bid3[:, 0][idx[2]]/(ask1[:, 0][idx[0]]* ask2[:, 0][idx[1]])
+    if ratio < threshold:
+        return 0, 0
+    value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
+
+    for i in range(10):
+        idx[np.argmin([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
+        new_ratio = bid3[:, 0][idx[2]]/(ask1[:, 0][idx[0]]* ask2[:, 0][idx[1]])
+        if new_ratio < threshold:
+            break
+        ratio = new_ratio
+        value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
+    return ratio, value
+
+# BASE1→ALT→BASE2→BASE1 のルート
+# 期待収益率が閾値を超えてたら(期待利益率, 量（ALT単位）)を、超えてなかったら(0, 0)を返す
+def root_d(bid1, bid2, ask3, threshold):
+    idx = np.zeros(3).astype(int)
+
+    amount1 = np.cumsum(bid1[:, 1] * bid2[-1][0])
+    amount2 = np.cumsum(bid2[:, 1])
+    amount3 = np.cumsum(ask3[:, 1])
+
+    ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]]/ask3[:, 0][idx[2]]
+    if ratio < threshold:
+        return 0, 0
+    value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
+
+    for i in range(10):
+        idx[np.argmin([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
+        new_ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]]/ask3[:, 0][idx[2]]
+        if new_ratio < threshold:
+            break
+        ratio = new_ratio
+        value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
+    return ratio, value
+
 
 def fetchCapacity(inited):
     """余力取得."""
@@ -157,9 +214,9 @@ def fetchValue(inited):
         return dic[ident].fetch_order_book(symbol)
     el = asyncio.get_event_loop()
     val = el.run_until_complete(asyncio.gather(
-        inited['hitbtc2'].fetch_order_book('XRP/BTC', limit=20),
-        inited['bitbank'].fetch_order_book('XRP/JPY', limit=20),
-        inited['bitbank'].fetch_order_book('BTC/JPY', limit=20)))
+        inited['hitbtc2'].fetch_order_book('XRP/BTC', limit=10),
+        inited['bitbank'].fetch_order_book('XRP/JPY', limit=10),
+        inited['bitbank'].fetch_order_book('BTC/JPY', limit=10)))
     newVal = {
         'hitbtc2': {'XRP/BTC': val[0]},
         'bitbank': {'XRP/JPY': val[1], 'BTC/JPY': val[2]}}
