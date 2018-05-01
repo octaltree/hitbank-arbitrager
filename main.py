@@ -88,6 +88,7 @@ def attemptTrade(inited, capacity, value):
             print('trade')
             if production:
                 # order
+                # TODO 価格指定arbを参考にする
                 pass
             return fetchCapacity(inited)
         else:
