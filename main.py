@@ -133,9 +133,13 @@ def attemptTrade(inited, capacity, value):
                 val / bitbankXrp['asks'][-1][0]))
             print('buy hitbtc2 XRP/BTC {}'.format(val))
         else:
-            # TODO production
             el = asyncio.get_event_loop()
-            el
+            res = el.run_until_complete(asyncio.gather(
+                inited['bitbank'].create_market_sell_order('XRP/JPY', val),
+                inited['bitbank'].create_market_buy_order(
+                    'XRP/JPY', val / bitbankXrp['asks'][-1][0]),
+                inited['hitbtc2'].create_market_buy_order('XRP/BTC', val)))
+            print(res)
     elif doTrade == -1:  # 2回買う
         if not production:
             print('buy bitbank XRP/JPY {}'.format(val))
@@ -143,9 +147,13 @@ def attemptTrade(inited, capacity, value):
                 val / bitbankXrp['asks'][-1][0]))
             print('sell hitbtc2 XRP/BTC {}'.format(val))
         else:
-            # TODO
             el = asyncio.get_event_loop()
-            el
+            res = el.run_until_complete(asyncio.gather(
+                inited['bitbank'].create_market_buy_order('XRP/JPY', val),
+                inited['bitbank'].create_market_sell_order(
+                    'XRP/JPY', val / bitbankXrp['asks'][-1][0]),
+                inited['hitbtc2'].create_market_sell_order('XRP/BTC', val)))
+            print(res)
     return fetchCapacity(inited)
 
 
