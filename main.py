@@ -80,26 +80,39 @@ def attemptTrade(inited, capacity, value):
             bitbankXrp['asks'],
             hitbtc2['bids'], 1.002)
         print((ratioS, valS, ratioB, valB))
-
         minUnit = max([
             inited['minUnit']['bitbank']['BTC/JPY'] /
             bitbankJpy['bids'][-1][0] /
             bitbankXrp['bids'][-1][0],
             inited['minUnit']['hitbtc2']['XRP/BTC'],
             inited['minUnit']['bitbank']['XRP/JPY']])
-
         doTrade = (
-            ratioS >= 1.002 and valS > minUnit or
-            ratioB >= 1.002 and valB > minUnit)
-        if doTrade:
-            print('trade')
-            if production:
-                # order
-                # TODO 価格指定arbを参考にする
-                pass
-            return fetchCapacity(inited)
-        else:
+            1 if ratioS >= 1.002 else
+            -1 if ratioB >= 1.002 else
+            0)
+        if not doTrade:
             return capacity
+        elif doTrade == 1:  # 2回売る
+            cap = min([  # TODO 量の単位
+                capacity['bitbank']['XRP'],
+                capacity['bitbank']['JPY'],
+                capacity['hitbtc2']['BTC']])
+            val = min([cap * 0.8, valS])
+        elif doTrade == -1:  # 2回買う
+            cap = min([  # TODO
+                capacity['bitbank']['JPY'],
+                capacity['bitbank']['BTC'],
+                capacity['hitbtc2']['XRP']])
+            val = min([cap * 0.8, valB])
+        if val < minUnit:
+            return capacity
+        # TODO 価格指定arbを参考にする
+        print('trade{} {}XRP'.format(doTrade, val))
+        if production:
+            # order
+            # TODO order API叩く
+            pass
+        return fetchCapacity(inited)
     except Exception:
         print_exc()
     return fetchCapacity(inited)
