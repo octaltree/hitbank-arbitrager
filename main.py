@@ -93,17 +93,20 @@ def attemptTrade(inited, capacity, value):
         if not doTrade:
             return capacity
         elif doTrade == 1:  # 2回売る
-            cap = min([  # TODO 量の単位
+            cap = min([
                 capacity['bitbank']['XRP'],
-                capacity['bitbank']['JPY'],
-                capacity['hitbtc2']['BTC']])
+                capacity['bitbank']['JPY'] * bitbankXrp['bids'][-1][0],
+                capacity['hitbtc2']['BTC'] / hitbtc2['asks'][-1][0]])
             val = min([cap * 0.8, valS])
         elif doTrade == -1:  # 2回買う
-            cap = min([  # TODO
-                capacity['bitbank']['JPY'],
-                capacity['bitbank']['BTC'],
+            cap = min([
+                capacity['bitbank']['JPY'] / bitbankXrp['asks'][-1][0],
+                capacity['bitbank']['BTC'] /
+                bitbankJpy['asks'][-1][0] /
+                bitbankXrp['asks'][-1][0],
                 capacity['hitbtc2']['XRP']])
             val = min([cap * 0.8, valB])
+        print((val, valS, valB))
         if val < minUnit:
             return capacity
         # TODO 価格指定arbを参考にする
