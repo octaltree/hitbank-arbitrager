@@ -55,23 +55,22 @@ def attemptTrade(inited, capacity, value):
     production = False
     try:
         hitbtc2 = {
-            'asks': np.array(value['hitbtc2']['XRP/BTC']['asks']),
-            'bids': np.array(value['hitbtc2']['XRP/BTC']['bids'])}
+            'asks': np.array(value['hitbtc2']['XRP/BTC']['asks'][:10]),
+            'bids': np.array(value['hitbtc2']['XRP/BTC']['bids'][:10])}
         bitbankXrp = {
-            'asks': np.array(value['bitbank']['XRP/JPY']['asks']),
-            'bids': np.array(value['bitbank']['XRP/JPY']['bids'])}
-        # TODO 量の単位を合わせる必要
-        bitbankJpy = {
+            'asks': np.array(value['bitbank']['XRP/JPY']['asks'][:10]),
+            'bids': np.array(value['bitbank']['XRP/JPY']['bids'][:10])}
+        bitbankJpy = {  # JPY/BTC
             'asks': np.array([
-                [1 / x[0], x[1]]
-                for x in value['bitbank']['BTC/JPY']['bids']]),
+                [1 / x[0], x[1] * x[0]]
+                for x in value['bitbank']['BTC/JPY']['bids'][:10]]),
             'bids': np.array([
-                [1 / x[0], x[1]]
-                for x in value['bitbank']['BTC/JPY']['asks']])}
-        print(hitbtc2)
-        print(bitbankXrp)
-        print(bitbankJpy)
+                [1 / x[0], x[1] * x[0]]
+                for x in value['bitbank']['BTC/JPY']['asks'][:10]])}
 
+        # XRPの枚数で取引量を示す
+        # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
+        # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
         (ratioS, valS) = calcSellingTwice(
             bitbankJpy['bids'],
             bitbankXrp['bids'],
@@ -84,6 +83,7 @@ def attemptTrade(inited, capacity, value):
 
         # TODO 最小単位以上あるか
         doTrade = ratioS >= 1.002 or ratioB >= 1.002
+        doTrade = False
         if doTrade:
             print('trade')
             if production:
@@ -103,7 +103,7 @@ def calcBuyingTwice(ask1, ask2, bid3, threshold):
     """ALT -> BASE1がBASE1 -> BASE2 -> ALTを上回れば(比率, 量)を返す."""
     idx = np.zeros(3).astype(int)
 
-    amount1 = np.cumsum(ask1[:, 1] * ask2[-1][0])
+    amount1 = np.cumsum(ask1[:, 1] / ask2[-1][0])
     amount2 = np.cumsum(ask2[:, 1])
     amount3 = np.cumsum(bid3[:, 1])
 
@@ -128,7 +128,7 @@ def calcSellingTwice(bid1, bid2, ask3, threshold):
     """ALT -> BASE2 -> BASE1がBASE1 -> ALTを上回れば(比率, 量)を返す."""
     idx = np.zeros(3).astype(int)
 
-    amount1 = np.cumsum(bid1[:, 1] * bid2[-1][0])
+    amount1 = np.cumsum(bid1[:, 1] / bid2[-1][0])
     amount2 = np.cumsum(bid2[:, 1])
     amount3 = np.cumsum(ask3[:, 1])
 
