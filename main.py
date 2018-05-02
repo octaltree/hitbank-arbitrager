@@ -13,7 +13,7 @@ from traceback import print_exc
 def main() -> int:
     """main."""
     inited = init()
-    capacity = None
+    capacity = fetchCapacity(inited)
     while True:
         try:
             # bitbank ETH JP
@@ -93,6 +93,10 @@ def attemptTrade(inited, capacity, value):
         if not doTrade:
             return capacity
         elif doTrade == 1:  # 2回売る
+            # print([
+            #     capacity['bitbank']['XRP'],
+            #     capacity['bitbank']['JPY'] * bitbankXrp['bids'][-1][0],
+            #     capacity['hitbtc2']['BTC'] / hitbtc2['asks'][-1][0]])
             cap = min([
                 capacity['bitbank']['XRP'],
                 capacity['bitbank']['JPY'] * bitbankXrp['bids'][-1][0],
@@ -106,11 +110,22 @@ def attemptTrade(inited, capacity, value):
                 bitbankXrp['asks'][-1][0],
                 capacity['hitbtc2']['XRP']])
             val = min([cap * 0.8, valB])
-        print((val, valS, valB))
+        # print((val, valS, valB))
+        priceXrpJpy = (
+            bitbankXrp['asks'][0][0] * 1.01 if doTrade == -1 else
+            bitbankXrp['bids'][0][0] * 0.99)
+        priceJpyBtc = (
+            bitbankJpy['asks'][0][0] * 1.01 if doTrade == -1 else
+            bitbankJpy['bids'][0][0] * 0.99)
+        priceXrpBtc = (
+            hitbtc2['bids'][0][0] * 0.99 if doTrade == -1 else
+            hitbtc2['asks'][0][0] * 1.01)
+        print('tradeChance{} {}XRP {} {} {} diff{}'.format(
+            doTrade, val, priceXrpJpy, priceJpyBtc, priceXrpBtc,
+            doTrade * (priceXrpBtc - priceXrpJpy * priceJpyBtc)))
         if val < minUnit:
             return capacity
-        # TODO 価格指定arbを参考にする
-        print('trade{} {}XRP'.format(doTrade, val))
+        print('trade')
         if production:
             # order
             # TODO order API叩く
