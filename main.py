@@ -132,7 +132,7 @@ def calcBuyingTwice(ask1, ask2, bid3, threshold):
         return (ratio, 0)
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
 
-    for i in range(10):
+    for i in range(9):
         idx[np.argmin([
             amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
         new_ratio = (
@@ -157,7 +157,7 @@ def calcSellingTwice(bid1, bid2, ask3, threshold):
         return (ratio, 0)
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
 
-    for i in range(10):
+    for i in range(9):
         idx[np.argmin([
             amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])] += 1
         new_ratio = (
