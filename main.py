@@ -60,7 +60,7 @@ def attemptTrade(inited, capacity, value):
         bitbankXrp = {
             'asks': np.array(value['bitbank']['XRP/JPY']['asks'][:10]),
             'bids': np.array(value['bitbank']['XRP/JPY']['bids'][:10])}
-        bitbankJpy = {  # JPY/BTC
+        bitbankJpy = {  # JPY/BTC (JPY1円あたりのBTC枚数, 円)
             'asks': np.array([
                 [1 / x[0], x[1] * x[0]]
                 for x in value['bitbank']['BTC/JPY']['bids'][:10]]),
@@ -81,9 +81,16 @@ def attemptTrade(inited, capacity, value):
             hitbtc2['bids'], 1.002)
         print((ratioS, valS, ratioB, valB))
 
-        # TODO 最小単位以上あるか
-        doTrade = ratioS >= 1.002 or ratioB >= 1.002
-        doTrade = False
+        minUnit = max([
+            inited['minUnit']['bitbank']['BTC/JPY'] /
+            bitbankJpy['bids'][-1][0] /
+            bitbankXrp['bids'][-1][0],
+            inited['minUnit']['hitbtc2']['XRP/BTC'],
+            inited['minUnit']['bitbank']['XRP/JPY']])
+
+        doTrade = (
+            ratioS >= 1.002 and valS > minUnit or
+            ratioB >= 1.002 and valB > minUnit)
         if doTrade:
             print('trade')
             if production:
