@@ -126,6 +126,7 @@ def attemptTrade(inited, capacity, value):
         if val < minUnit:
             return capacity
         print('trade')
+        # TODO 売買量をいじって偏りをなおす
         if production:
             # order
             # TODO order API叩く
