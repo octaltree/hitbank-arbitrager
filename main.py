@@ -23,7 +23,8 @@ def main() -> int:
             time.sleep(3)
         except Exception:
             print_exc()
-            time.sleep(10)
+            time.sleep(5)
+            capacity = fetchCapacity(inited)
     return 0
 
 
@@ -53,87 +54,98 @@ def init():
 def attemptTrade(inited, capacity, value):
     """判断 トレード 余力取得."""
     production = False
-    try:
-        hitbtc2 = {
-            'asks': np.array(value['hitbtc2']['XRP/BTC']['asks'][:10]),
-            'bids': np.array(value['hitbtc2']['XRP/BTC']['bids'][:10])}
-        bitbankXrp = {
-            'asks': np.array(value['bitbank']['XRP/JPY']['asks'][:10]),
-            'bids': np.array(value['bitbank']['XRP/JPY']['bids'][:10])}
-        bitbankJpy = {  # JPY/BTC (JPY1円あたりのBTC枚数, 円)
-            'asks': np.array([
-                [1 / x[0], x[1] * x[0]]
-                for x in value['bitbank']['BTC/JPY']['bids'][:10]]),
-            'bids': np.array([
-                [1 / x[0], x[1] * x[0]]
-                for x in value['bitbank']['BTC/JPY']['asks'][:10]])}
+    hitbtc2 = {
+        'asks': np.array(value['hitbtc2']['XRP/BTC']['asks'][:10]),
+        'bids': np.array(value['hitbtc2']['XRP/BTC']['bids'][:10])}
+    bitbankXrp = {
+        'asks': np.array(value['bitbank']['XRP/JPY']['asks'][:10]),
+        'bids': np.array(value['bitbank']['XRP/JPY']['bids'][:10])}
+    bitbankJpy = {  # JPY/BTC (JPY1円あたりのBTC枚数, 円)
+        'asks': np.array([
+            [1 / x[0], x[1] * x[0]]
+            for x in value['bitbank']['BTC/JPY']['bids'][:10]]),
+        'bids': np.array([
+            [1 / x[0], x[1] * x[0]]
+            for x in value['bitbank']['BTC/JPY']['asks'][:10]])}
 
-        # XRPの枚数で取引量を示す
-        # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
-        # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
-        (ratioS, valS) = calcSellingTwice(
-            bitbankJpy['bids'],
-            bitbankXrp['bids'],
-            hitbtc2['asks'], 1.002)
-        (ratioB, valB) = calcBuyingTwice(
-            bitbankJpy['asks'],
-            bitbankXrp['asks'],
-            hitbtc2['bids'], 1.002)
-        print((ratioS, valS, ratioB, valB))
-        minUnit = max([
-            inited['minUnit']['bitbank']['BTC/JPY'] /
-            bitbankJpy['bids'][-1][0] /
-            bitbankXrp['bids'][-1][0],
-            inited['minUnit']['hitbtc2']['XRP/BTC'],
-            inited['minUnit']['bitbank']['XRP/JPY']])
-        doTrade = (
-            1 if ratioS >= 1.002 else
-            -1 if ratioB >= 1.002 else
-            0)
-        if not doTrade:
-            return capacity
-        elif doTrade == 1:  # 2回売る
-            # print([
-            #     capacity['bitbank']['XRP'],
-            #     capacity['bitbank']['JPY'] * bitbankXrp['bids'][-1][0],
-            #     capacity['hitbtc2']['BTC'] / hitbtc2['asks'][-1][0]])
-            cap = min([
-                capacity['bitbank']['XRP'],
-                capacity['bitbank']['JPY'] * bitbankXrp['bids'][-1][0],
-                capacity['hitbtc2']['BTC'] / hitbtc2['asks'][-1][0]])
-            val = min([cap * 0.8, valS])
-        elif doTrade == -1:  # 2回買う
-            cap = min([
-                capacity['bitbank']['JPY'] / bitbankXrp['asks'][-1][0],
-                capacity['bitbank']['BTC'] /
-                bitbankJpy['asks'][-1][0] /
-                bitbankXrp['asks'][-1][0],
-                capacity['hitbtc2']['XRP']])
-            val = min([cap * 0.8, valB])
-        # print((val, valS, valB))
-        priceXrpJpy = (
-            bitbankXrp['asks'][0][0] * 1.01 if doTrade == -1 else
-            bitbankXrp['bids'][0][0] * 0.99)
-        priceJpyBtc = (
-            bitbankJpy['asks'][0][0] * 1.01 if doTrade == -1 else
-            bitbankJpy['bids'][0][0] * 0.99)
-        priceXrpBtc = (
-            hitbtc2['bids'][0][0] * 0.99 if doTrade == -1 else
-            hitbtc2['asks'][0][0] * 1.01)
-        print('tradeChance{} {}XRP {} {} {} diff{}'.format(
-            doTrade, val, priceXrpJpy, priceJpyBtc, priceXrpBtc,
-            doTrade * (priceXrpBtc - priceXrpJpy * priceJpyBtc)))
-        if val < minUnit:
-            return capacity
-        print('trade')
-        # TODO 売買量をいじって偏りをなおす
-        if production:
-            # order
-            # TODO order API叩く
-            pass
-        return fetchCapacity(inited)
-    except Exception:
-        print_exc()
+    # XRPの枚数で取引量を示す
+    # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
+    # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
+    (ratioS, valS) = calcSellingTwice(
+        bitbankJpy['bids'],
+        bitbankXrp['bids'],
+        hitbtc2['asks'], 1.002)
+    (ratioB, valB) = calcBuyingTwice(
+        bitbankJpy['asks'],
+        bitbankXrp['asks'],
+        hitbtc2['bids'], 1.002)
+    print((ratioS, valS, ratioB, valB))
+    minUnit = max([
+        inited['minUnit']['bitbank']['BTC/JPY'] /
+        bitbankJpy['bids'][-1][0] /
+        bitbankXrp['bids'][-1][0],
+        inited['minUnit']['hitbtc2']['XRP/BTC'],
+        inited['minUnit']['bitbank']['XRP/JPY']])
+    doTrade = (
+        1 if ratioS >= 1.002 else
+        -1 if ratioB >= 1.002 else
+        0)
+    if not doTrade:
+        return capacity
+    elif doTrade == 1:  # 2回売る
+        # print([
+        #     capacity['bitbank']['XRP'],
+        #     capacity['bitbank']['JPY'] * bitbankXrp['bids'][-1][0],
+        #     capacity['hitbtc2']['BTC'] / hitbtc2['asks'][-1][0]])
+        cap = min([
+            capacity['bitbank']['XRP'],
+            capacity['bitbank']['JPY'] * bitbankXrp['bids'][-1][0],
+            capacity['hitbtc2']['BTC'] / hitbtc2['asks'][-1][0]])
+        val = min([cap * 0.8, valS])
+    elif doTrade == -1:  # 2回買う
+        cap = min([
+            capacity['bitbank']['JPY'] / bitbankXrp['asks'][-1][0],
+            capacity['bitbank']['BTC'] /
+            bitbankJpy['asks'][-1][0] /
+            bitbankXrp['asks'][-1][0],
+            capacity['hitbtc2']['XRP']])
+        val = min([cap * 0.8, valB])
+    # print((val, valS, valB))
+    priceXrpJpy = (
+        bitbankXrp['asks'][0][0] * 1.01 if doTrade == -1 else
+        bitbankXrp['bids'][0][0] * 0.99)
+    priceJpyBtc = (
+        bitbankJpy['asks'][0][0] * 1.01 if doTrade == -1 else
+        bitbankJpy['bids'][0][0] * 0.99)
+    priceXrpBtc = (
+        hitbtc2['bids'][0][0] * 0.99 if doTrade == -1 else
+        hitbtc2['asks'][0][0] * 1.01)
+    print('tradeChance{} {}XRP {} {} {} diff{}'.format(
+        doTrade, val, priceXrpJpy, priceJpyBtc, priceXrpBtc,
+        doTrade * (priceXrpBtc - priceXrpJpy * priceJpyBtc)))
+    if val < minUnit:
+        return capacity
+    # TODO 売買量をいじって偏りをなおす
+    if doTrade == 1:  # 2回売る
+        if not production:
+            print('sell bitbank XRP/JPY {}'.format(val))
+            print('buy bitbank BTC/JPY {}'.format(
+                val / bitbankXrp['asks'][-1][0]))
+            print('buy hitbtc2 XRP/BTC {}'.format(val))
+        else:
+            # TODO production
+            el = asyncio.get_event_loop()
+            el
+    elif doTrade == -1:  # 2回買う
+        if not production:
+            print('buy bitbank XRP/JPY {}'.format(val))
+            print('sell bitbank BTC/JPY {}'.format(
+                val / bitbankXrp['asks'][-1][0]))
+            print('sell hitbtc2 XRP/BTC {}'.format(val))
+        else:
+            # TODO
+            el = asyncio.get_event_loop()
+            el
     return fetchCapacity(inited)
 
 
