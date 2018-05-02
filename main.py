@@ -12,6 +12,9 @@ from traceback import print_exc
 
 def main() -> int:
     """main."""
+    production = bool(os.environ.get('production_arbitrager', False))
+    if not production:
+        print('mode: dry run')
     inited = init()
     capacity = fetchCapacity(inited)
     while True:
@@ -19,7 +22,9 @@ def main() -> int:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
-            capacity = attemptTrade(inited, capacity, value)
+            capacity = attemptTrade(
+                inited, capacity, value,
+                production=production)
             time.sleep(3)
         except Exception:
             print_exc()
@@ -51,9 +56,8 @@ def init():
     return {'hitbtc2': hitbtc2, 'bitbank': bitbank, 'minUnit': minUnit}
 
 
-def attemptTrade(inited, capacity, value):
+def attemptTrade(inited, capacity, value, production=False):
     """判断 トレード 余力取得."""
-    production = False
     hitbtc2 = {
         'asks': np.array(value['hitbtc2']['XRP/BTC']['asks'][:10]),
         'bids': np.array(value['hitbtc2']['XRP/BTC']['bids'][:10])}
