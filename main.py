@@ -46,6 +46,9 @@ def init():
     bitbank = ccxt.bitbank({
         'apiKey': os.environ.get('bitbank_key'),
         'secret': os.environ.get('bitbank_secret')})
+    bitbank2 = ccxt.bitbank({
+        'apiKey': os.environ.get('bitbank_key2'),
+        'secret': os.environ.get('bitbank_secret2')})
     el = asyncio.get_event_loop()
     (hitbtc2Markets, bitbankMarkets) = el.run_until_complete(asyncio.gather(
         hitbtc2.load_markets(),
@@ -56,7 +59,8 @@ def init():
             'BTC/JPY': 0.0001},
         'hitbtc2': {
             'XRP/BTC': hitbtc2Markets['XRP/BTC']['limits']['amount']['min']}}
-    return {'hitbtc2': hitbtc2, 'bitbank': bitbank, 'minUnit': minUnit}
+    return {'hitbtc2': hitbtc2, 'bitbank': bitbank,
+            'bitbank2': bitbank2, 'minUnit': minUnit}
 
 
 def attemptTrade(inited, capacity, value, production=False):
@@ -146,7 +150,7 @@ def attemptTrade(inited, capacity, value, production=False):
             el = asyncio.get_event_loop()
             bx = inited['bitbank'].create_limit_sell_order(
                 'XRP/JPY', val, priceXrpJpy)
-            bj = inited['bitbank'].create_limit_buy_order(
+            bj = inited['bitbank2'].create_limit_buy_order(
                 'XRP/JPY',
                 val * bitbankXrp['bids'][-1][0] *
                 bitbankJpy['bids'][-1][0],
@@ -164,7 +168,7 @@ def attemptTrade(inited, capacity, value, production=False):
             el = asyncio.get_event_loop()
             bx = inited['bitbank'].create_limit_buy_order(
                 'XRP/JPY', val, priceXrpJpy)
-            bj = inited['bitbank'].create_limit_sell_order(
+            bj = inited['bitbank2'].create_limit_sell_order(
                 'XRP/JPY',
                 val * bitbankXrp['bids'][-1][0] *
                 bitbankJpy['bids'][-1][0],
