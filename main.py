@@ -13,8 +13,7 @@ from traceback import print_exc
 def main() -> int:
     """main."""
     production = bool(os.environ.get('production_arbitrager', False))
-    if not production:
-        print('mode: dry run')
+    print('mode: ' + ('production' if production else 'dry run'))
     inited = init()
     capacity = fetchCapacity(inited)
     while True:
