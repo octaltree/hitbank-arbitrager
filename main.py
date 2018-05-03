@@ -25,7 +25,7 @@ def main() -> int:
             capacity = attemptTrade(
                 inited, capacity, value,
                 production=production)
-            time.sleep(3)
+            time.sleep(4)
         except Exception:
             print_exc()
             time.sleep(5)
