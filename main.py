@@ -21,11 +21,9 @@ def main() -> int:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
-            nextCap = attemptTrade(
+            capacity = attemptTrade(
                 inited, capacity, value,
                 production=production)
-            if nextCap != capacity:
-                return 0
             time.sleep(4)
         except Exception as e:
             print_exc()
