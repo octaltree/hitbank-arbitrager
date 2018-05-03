@@ -136,8 +136,8 @@ def attemptTrade(inited, capacity, value, production=False):
         bitbankXrp['asks'][0][0] * 1.005 if doTrade == -1 else
         bitbankXrp['bids'][0][0] * 0.995)
     priceJpyBtc = (
-        bitbankJpy['asks'][0][0] * 1.005 if doTrade == -1 else
-        bitbankJpy['bids'][0][0] * 0.995)
+        bitbankJpy['asks'][0][0] * 1.01 if doTrade == -1 else
+        bitbankJpy['bids'][0][0] * 0.99)
     priceBtcJpy = (
         (1 / bitbankJpy['bids'][0][0]) * 1.005 if doTrade == -1 else
         (1 / bitbankJpy['asks'][0][0]) * 0.995)
