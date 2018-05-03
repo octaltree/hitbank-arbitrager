@@ -21,12 +21,16 @@ def main() -> int:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
-            capacity = attemptTrade(
+            nextCap = attemptTrade(
                 inited, capacity, value,
                 production=production)
+            if nextCap != capacity:
+                return 0
             time.sleep(4)
-        except Exception:
+        except Exception as e:
             print_exc()
+            print(e)
+            return 1
             time.sleep(5)
             capacity = fetchCapacity(inited)
     return 0
@@ -115,16 +119,19 @@ def attemptTrade(inited, capacity, value, production=False):
         val = min([cap * 0.8, valB])
     # print((val, valS, valB))
     priceXrpJpy = (
-        bitbankXrp['asks'][0][0] * 1.01 if doTrade == -1 else
-        bitbankXrp['bids'][0][0] * 0.99)
+        bitbankXrp['asks'][0][0] * 1.005 if doTrade == -1 else
+        bitbankXrp['bids'][0][0] * 0.995)
     priceJpyBtc = (
-        bitbankJpy['asks'][0][0] * 1.01 if doTrade == -1 else
-        bitbankJpy['bids'][0][0] * 0.99)
+        bitbankJpy['asks'][0][0] * 1.005 if doTrade == -1 else
+        bitbankJpy['bids'][0][0] * 0.995)
+    priceBtcJpy = (
+        (1 / bitbankJpy['bids'][0][0]) * 1.005 if doTrade == -1 else
+        (1 / bitbankJpy['asks'][0][0]) * 0.995)
     priceXrpBtc = (
-        hitbtc2['bids'][0][0] * 0.99 if doTrade == -1 else
-        hitbtc2['asks'][0][0] * 1.01)
+        hitbtc2['bids'][0][0] * 0.995 if doTrade == -1 else
+        hitbtc2['asks'][0][0] * 1.005)
     print('tradeChance{} {}XRP {} {} {} diff{}'.format(
-        doTrade, val, priceXrpJpy, priceJpyBtc, priceXrpBtc,
+        doTrade, val, priceXrpJpy, priceBtcJpy, priceXrpBtc,
         doTrade * (priceXrpBtc - priceXrpJpy * priceJpyBtc)))
     if val < minUnit:
         return capacity
@@ -133,7 +140,7 @@ def attemptTrade(inited, capacity, value, production=False):
         print('sell bitbank XRP/JPY {} {}'.format(val, priceXrpJpy))
         print('buy bitbank BTC/JPY {} {}'.format(
             val * bitbankXrp['bids'][-1][0] * bitbankJpy['bids'][-1][0],
-            1 / priceJpyBtc))
+            priceBtcJpy))
         print('buy hitbtc2 XRP/BTC {}'.format(val))
         if production:
             el = asyncio.get_event_loop()
@@ -144,14 +151,14 @@ def attemptTrade(inited, capacity, value, production=False):
                     'XRP/JPY',
                     val * bitbankXrp['bids'][-1][0] *
                     bitbankJpy['bids'][-1][0],
-                    1 / priceJpyBtc),
+                    priceBtcJpy),
                 inited['hitbtc2'].create_market_buy_order('XRP/BTC', val)))
             print(res)
     elif doTrade == -1:  # 2回買う
         print('buy bitbank XRP/JPY {} {}'.format(val, priceXrpJpy))
         print('sell bitbank BTC/JPY {} {}'.format(
             val * bitbankXrp['asks'][-1][0] * bitbankJpy['asks'][-1][0],
-            1 / priceJpyBtc))
+            priceBtcJpy))
         print('sell hitbtc2 XRP/BTC {}'.format(val))
         if production:
             el = asyncio.get_event_loop()
@@ -162,7 +169,7 @@ def attemptTrade(inited, capacity, value, production=False):
                     'XRP/JPY',
                     val * bitbankXrp['bids'][-1][0] *
                     bitbankJpy['bids'][-1][0],
-                    1 / priceJpyBtc),
+                    priceBtcJpy),
                 inited['hitbtc2'].create_market_sell_order('XRP/BTC', val)))
             print(res)
     return fetchCapacity(inited)
