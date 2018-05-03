@@ -21,6 +21,7 @@ def main() -> int:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
+            print('評価額{}円'.format(calcMoney(capacity, value)))
             capacity = attemptTrade(
                 inited, capacity, value,
                 production=production)
@@ -32,6 +33,17 @@ def main() -> int:
             time.sleep(5)
             capacity = fetchCapacity(inited)
     return 0
+
+
+def calcMoney(capacity, value):
+    """評価額XRP換算."""
+    xrp = value['bitbank']['XRP/JPY']['bids'][0][0]
+    btc = value['bitbank']['BTC/JPY']['bids'][0][0]
+    res = (
+        capacity['bitbank']['JPY'] +
+        (capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP']) * xrp +
+        (capacity['bitbank']['BTC'] + capacity['hitbtc2']['BTC']) * btc)
+    return res
 
 
 def init():
