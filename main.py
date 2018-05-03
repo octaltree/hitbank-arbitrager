@@ -92,11 +92,11 @@ def attemptTrade(inited, capacity, value, production=False):
     # XRPの枚数で取引量を示す
     # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
     # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
-    (ratioS, valS) = calcSellingTwice(
+    (ratioS, valS, pbjS, pbxS, phS) = calcSellingTwice(
         bitbankJpy['bids'],
         bitbankXrp['bids'],
         hitbtc2['asks'], 1.002)
-    (ratioB, valB) = calcBuyingTwice(
+    (ratioB, valB, pbjB, pbxB, phB) = calcBuyingTwice(
         bitbankJpy['asks'],
         bitbankXrp['asks'],
         hitbtc2['bids'], 1.002)
@@ -147,6 +147,10 @@ def attemptTrade(inited, capacity, value, production=False):
     print('tradeChance{} {}XRP {} {} {} diff{}'.format(
         doTrade, val, priceXrpJpy, priceBtcJpy, priceXrpBtc,
         doTrade * (priceXrpBtc - priceXrpJpy * priceJpyBtc)))
+    if doTrade == 1:
+        print('{} {} {}'.format(pbxS, pbjS, phS))
+    elif doTrade == -1:
+        print('{} {} {}'.format(pbxB, pbjB, phB))
     if val < minUnit:
         return capacity
     # TODO 売買量をいじって偏りをなおす
@@ -200,7 +204,7 @@ def calcBuyingTwice(ask1, ask2, bid3, threshold):
 
     ratio = bid3[:, 0][idx[2]] / (ask1[:, 0][idx[0]] * ask2[:, 0][idx[1]])
     if ratio < threshold:
-        return (ratio, 0)
+        return (ratio, 0, 0, 0, 999999999999)
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
 
     for i in range(9):
@@ -212,7 +216,7 @@ def calcBuyingTwice(ask1, ask2, bid3, threshold):
             break
         ratio = new_ratio
         value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
-    return ratio, value
+    return (ratio, value, ask1[idx[0], 0], ask2[idx[1], 0], bid3[idx[2], 0])
 
 
 def calcSellingTwice(bid1, bid2, ask3, threshold):
@@ -225,7 +229,7 @@ def calcSellingTwice(bid1, bid2, ask3, threshold):
 
     ratio = bid1[:, 0][idx[0]] * bid2[:, 0][idx[1]] / ask3[:, 0][idx[2]]
     if ratio < threshold:
-        return (ratio, 0)
+        return (ratio, 0, 99999999999, 9999999999, 0)
     value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
 
     for i in range(9):
@@ -237,7 +241,7 @@ def calcSellingTwice(bid1, bid2, ask3, threshold):
             break
         ratio = new_ratio
         value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
-    return ratio, value
+    return (ratio, value, bid1[idx[0], 0], bid2[idx[1], 0], ask3[idx[2], 0])
 
 
 def fetchCapacity(inited):
