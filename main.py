@@ -16,15 +16,19 @@ def main() -> int:
     print('mode: ' + ('production' if production else 'dry run'))
     inited = init()
     capacity = fetchCapacity(inited)
+    printCapacity(capacity)
     while True:
         try:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
             print('評価額{}円'.format(calcMoney(capacity, value)))
-            capacity = attemptTrade(
+            newCap = attemptTrade(
                 inited, capacity, value,
                 production=production)
+            if newCap != capacity:
+                printCapacity(newCap)
+                capacity = newCap
             time.sleep(4)
         except Exception as e:
             print_exc()
@@ -32,7 +36,16 @@ def main() -> int:
             return 1
             time.sleep(5)
             capacity = fetchCapacity(inited)
+            printCapacity(capacity)
     return 0
+
+
+def printCapacity(capacity):
+    """資産を表示."""
+    print('資産 {}XRP {}JPY {}BTC'.format(
+        capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP'],
+        capacity['bitbank']['JPY'],
+        capacity['bitbank']['BTC'] + capacity['hitbtc2']['BTC']))
 
 
 def calcMoney(capacity, value):
@@ -140,19 +153,15 @@ def attemptTrade(inited, capacity, value, production=False):
     print('    1XRPを{}BTCで{}'.format(phx, '買' if doTrade == 1 else '売'))
     print('    1XRPあたり{}BTC得 {}'.format(
         doTrade * (pbj * pbx - phx), ratio))
-    print('  資産')
-    print('    hitbtc {}XRP {}BTC={}XRP'.format(
-        capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC'],
-        capacity['hitbtc2']['BTC'] / phx))
-    print('    bitbank {}XRP {}JPY={}XRP {}BTC={}XRP'.format(
-        capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
-        capacity['bitbank']['JPY'] / pbx, capacity['bitbank']['BTC'],
-        capacity['bitbank']['BTC'] / pbj / pbx))
-    print('    計 {}XRP {}JPY {}BTC'.format(
-        capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP'],
-        capacity['bitbank']['JPY'],
-        capacity['bitbank']['BTC'] + capacity['hitbtc2']['BTC']))
     if val < minUnit:
+        print('  資産')
+        print('    hitbtc {}XRP {}BTC={}XRP'.format(
+            capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC'],
+            capacity['hitbtc2']['BTC'] / phx))
+        print('    bitbank {}XRP {}JPY={}XRP {}BTC={}XRP'.format(
+            capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
+            capacity['bitbank']['JPY'] / pbx, capacity['bitbank']['BTC'],
+            capacity['bitbank']['BTC'] / pbj / pbx))
         return capacity
 
     # TODO 売買量をいじって偏りをなおす
