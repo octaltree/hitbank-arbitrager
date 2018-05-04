@@ -123,7 +123,7 @@ def attemptTrade(inited, capacity, value, production=False):
         inited['minUnit']['bitbank']['BTC/JPY'] / pbj / pbx,
         inited['minUnit']['hitbtc2']['XRP/BTC'],
         inited['minUnit']['bitbank']['XRP/JPY']])
-    print('{}XRP単位で取引可')
+    print('{}XRP単位で取引可'.format(minUnit))
     print('資産')
     print('hitbtc {}XRP {}BTC={}XRP'.format(
         capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC'],
