@@ -197,7 +197,7 @@ def calcBuyingTwice(ask1, ask2, bid3, threshold):
         if new_ratio < threshold:
             break
         ratio = new_ratio
-        value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
+        # value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
     return (ratio, value, ask1[idx[0], 0], ask2[idx[1], 0], bid3[idx[2], 0])
 
 
@@ -222,7 +222,7 @@ def calcSellingTwice(bid1, bid2, ask3, threshold):
         if new_ratio < threshold:
             break
         ratio = new_ratio
-        value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
+        # value = np.min([amount1[idx[0]], amount2[idx[1]], amount3[idx[2]]])
     return (ratio, value, bid1[idx[0], 0], bid2[idx[1], 0], ask3[idx[2], 0])
 
 
