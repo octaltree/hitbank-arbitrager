@@ -156,8 +156,10 @@ def attemptTrade(inited, capacity, value, production=False):
         print('buy hitbtc2 XRP/BTC {}XRP'.format(val))
         if production:
             el = asyncio.get_event_loop()
-            bx = inited['bitbank'].create_limit_sell_order('XRP/JPY', val, pbx)
-            bj = inited['bitbank2'].create_limit_buy_order('XRP/JPY', vb, pbb)
+            bx = inited['bitbank'].create_order(
+                    'XRP/JPY', 'market', 'sell', val, 9999999)
+            bj = inited['bitbank2'].create_order(
+                    'BTC/JPY', 'market', 'buy', vb, 1)
             hx = inited['hitbtc2'].create_market_buy_order('XRP/BTC', val)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
             print(res)
@@ -167,8 +169,10 @@ def attemptTrade(inited, capacity, value, production=False):
         print('sell hitbtc2 XRP/BTC {}XRP'.format(val))
         if production:
             el = asyncio.get_event_loop()
-            bx = inited['bitbank'].create_limit_buy_order('XRP/JPY', val, pbx)
-            bj = inited['bitbank2'].create_limit_sell_order('XRP/JPY', vb, pbb)
+            bx = inited['bitbank'].create_order(
+                    'XRP/JPY', 'market', 'buy', val, 1)
+            bj = inited['bitbank2'].create_order(
+                    'BTC/JPY', 'market', 'sell', vb, pbb)
             hx = inited['hitbtc2'].create_market_sell_order('XRP/BTC', val)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
             print(res)
