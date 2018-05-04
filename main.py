@@ -146,6 +146,10 @@ def attemptTrade(inited, capacity, value, production=False):
         capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
         capacity['bitbank']['JPY'] / pbx, capacity['bitbank']['BTC'],
         capacity['bitbank']['BTC'] / pbj / pbx))
+    print('    計 {}XRP {}JPY {}BTC'.format(
+        capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP'],
+        capacity['bitbank']['JPY'],
+        capacity['bitbank']['BTC'] + capacity['hitbtc2']['BTC']))
     if val < minUnit:
         return capacity
 
@@ -157,9 +161,9 @@ def attemptTrade(inited, capacity, value, production=False):
         if production:
             el = asyncio.get_event_loop()
             bx = inited['bitbank'].create_order(
-                    'XRP/JPY', 'market', 'sell', val, 9999999)
+                'XRP/JPY', 'market', 'sell', val, 9999999)
             bj = inited['bitbank2'].create_order(
-                    'BTC/JPY', 'market', 'buy', vb, 1)
+                'BTC/JPY', 'market', 'buy', vb, 1)
             hx = inited['hitbtc2'].create_market_buy_order('XRP/BTC', val)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
             print(res)
@@ -170,9 +174,9 @@ def attemptTrade(inited, capacity, value, production=False):
         if production:
             el = asyncio.get_event_loop()
             bx = inited['bitbank'].create_order(
-                    'XRP/JPY', 'market', 'buy', val, 1)
+                'XRP/JPY', 'market', 'buy', val, 1)
             bj = inited['bitbank2'].create_order(
-                    'BTC/JPY', 'market', 'sell', vb, pbb)
+                'BTC/JPY', 'market', 'sell', vb, pbb)
             hx = inited['hitbtc2'].create_market_sell_order('XRP/BTC', val)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
             print(res)
