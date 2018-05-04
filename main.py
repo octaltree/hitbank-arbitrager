@@ -92,18 +92,20 @@ def attemptTrade(inited, capacity, value, production=False):
     # XRPの枚数で取引量を示す
     # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
     # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
+    thresholdS = 1.002
+    thresholdB = 1.005
     (ratioS, valS, pbjS, pbxS, phxS) = calcSellingTwice(
         bitbankJpy['bids'],
         bitbankXrp['bids'],
-        hitbtc2['asks'], 1.002)
+        hitbtc2['asks'], thresholdS)
     (ratioB, valB, pbjB, pbxB, phxB) = calcBuyingTwice(
         bitbankJpy['asks'],
         bitbankXrp['asks'],
-        hitbtc2['bids'], 1.002)
+        hitbtc2['bids'], thresholdB)
     print((ratioS, valS, ratioB, valB))
     doTrade = (
-        1 if ratioS >= 1.002 else  # 2回売る
-        -1 if ratioB >= 1.002 else  # 2回買う
+        1 if ratioS >= thresholdS else  # 2回売る
+        -1 if ratioB >= thresholdB else  # 2回買う
         0)
     if not doTrade:
         return capacity
