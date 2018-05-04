@@ -142,6 +142,7 @@ def attemptTrade(inited, capacity, value, production=False):
         capacity['hitbtc2']['XRP']])
     cap = capS if doTrade == 1 else capB
     val = min([cap * 0.8, valS if doTrade == 1 else valB])
+    vb = val * pbx * pbj
     print('tradeChance {}XRP'.format(val))
     if val < minUnit:
         return capacity
@@ -149,42 +150,26 @@ def attemptTrade(inited, capacity, value, production=False):
     # TODO 売買量をいじって偏りをなおす
     if doTrade == 1:  # 2回売る
         print('sell bitbank XRP/JPY {}XRP {}JPY per XRP'.format(val, pbx))
-        print('buy bitbank BTC/JPY {}BTC {}JPY per BTC'.format(
-            val * pbx * pbj, pbb))
+        print('buy bitbank BTC/JPY {}BTC {}JPY per BTC'.format(vb, pbb))
         print('buy hitbtc2 XRP/BTC {}XRP'.format(val))
         if production:
-            # TODO
-            pass
-            # el = asyncio.get_event_loop()
-            # bx = inited['bitbank'].create_limit_sell_order(
-            #     'XRP/JPY', val, priceXrpJpy)
-            # bj = inited['bitbank2'].create_limit_buy_order(
-            #     'XRP/JPY',
-            #     val * bitbankXrp['bids'][-1][0] *
-            #     bitbankJpy['bids'][-1][0],
-            #     priceBtcJpy)
-            # hx = inited['hitbtc2'].create_market_buy_order('XRP/BTC', val)
-            # res = el.run_until_complete(asyncio.gather(bx, bj, hx))
-            # print(res)
+            el = asyncio.get_event_loop()
+            bx = inited['bitbank'].create_limit_sell_order('XRP/JPY', val, pbx)
+            bj = inited['bitbank2'].create_limit_buy_order('XRP/JPY', vb, pbb)
+            hx = inited['hitbtc2'].create_market_buy_order('XRP/BTC', val)
+            res = el.run_until_complete(asyncio.gather(bx, bj, hx))
+            print(res)
     elif doTrade == -1:  # 2回買う
         print('buy bitbank XRP/JPY {}XRP {}JPY per XRP'.format(val, pbx))
-        print('sell bitbank BTC/JPY {}BTC {}JPY per BTC'.format(
-            val * pbx * pbj, pbb))
+        print('sell bitbank BTC/JPY {}BTC {}JPY per BTC'.format(vb, pbb))
         print('sell hitbtc2 XRP/BTC {}XRP'.format(val))
         if production:
-            # TODO
-            pass
-            # el = asyncio.get_event_loop()
-            # bx = inited['bitbank'].create_limit_buy_order(
-            #     'XRP/JPY', val, priceXrpJpy)
-            # bj = inited['bitbank2'].create_limit_sell_order(
-            #     'XRP/JPY',
-            #     val * bitbankXrp['bids'][-1][0] *
-            #     bitbankJpy['bids'][-1][0],
-            #     priceBtcJpy)
-            # hx = inited['hitbtc2'].create_market_sell_order('XRP/BTC', val)
-            # res = el.run_until_complete(asyncio.gather(bx, bj, hx))
-            # print(res)
+            el = asyncio.get_event_loop()
+            bx = inited['bitbank'].create_limit_buy_order('XRP/JPY', val, pbx)
+            bj = inited['bitbank2'].create_limit_sell_order('XRP/JPY',vb, pbb)
+            hx = inited['hitbtc2'].create_market_sell_order('XRP/BTC', val)
+            res = el.run_until_complete(asyncio.gather(bx, bj, hx))
+            print(res)
     return fetchCapacity(inited)
 
 
