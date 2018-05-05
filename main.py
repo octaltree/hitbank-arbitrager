@@ -78,7 +78,7 @@ def init():
         bitbank.load_markets()))
     minUnit = {
         'bitbank': {
-            'XRP/JPY': 0.0001,
+            'XRP/JPY': hitbtc2Markets['XRP/BTC']['limits']['amount']['min'],
             'BTC/JPY': 0.0001},
         'hitbtc2': {
             'XRP/BTC': hitbtc2Markets['XRP/BTC']['limits']['amount']['min']}}
@@ -143,7 +143,7 @@ def attemptTrade(inited, capacity, value, production=False):
         capacity['bitbank']['BTC'] / pbj / pbx,
         capacity['hitbtc2']['XRP']])
     cap = capS if doTrade == 1 else capB
-    val = min([cap * 0.8, valS if doTrade == 1 else valB])
+    val = int(min([cap * 0.8, valS if doTrade == 1 else valB]) / minUnit)
     vb = val * pbx * pbj
     print('  tradeChance {}XRP'.format(val))
     print('    {}XRP単位で取引可'.format(minUnit))
