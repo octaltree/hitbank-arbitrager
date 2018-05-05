@@ -128,7 +128,6 @@ def attemptTrade(inited, capacity, value, production=False):
     pbj = pbjS if doTrade == 1 else pbjB  # pbj BTC per JPY in bitbank
     pbb = 1 / pbj  # pbb JPY per BTC
     pbx = pbxS if doTrade == 1 else pbxB  # pbx JPY per XRP
-    # TODO 期待する額で成行約定していない
     phx = phxS if doTrade == 1 else phxB  # phx BTC per XRP in hitbtc
     # TODO 円の増減があり働いてない
     minUnit = max([
