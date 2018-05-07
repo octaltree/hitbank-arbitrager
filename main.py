@@ -29,7 +29,7 @@ def main() -> int:
                 inited, capacity, value,
                 production=production)
             if newCap == capacity:
-                capacity = fetchCapacity(inited)
+                newCap = fetchCapacity(inited)
                 capCount = 0
             if newCap != capacity:
                 printCapacityDiff(capacity, newCap)
