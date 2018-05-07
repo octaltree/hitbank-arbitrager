@@ -27,6 +27,7 @@ def main() -> int:
                 inited, capacity, value,
                 production=production)
             if newCap != capacity:
+                printCapacityDiff(capacity, newCap)
                 printCapacity(newCap)
                 capacity = newCap
             time.sleep(4)
@@ -46,6 +47,15 @@ def printCapacity(capacity):
         capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP'],
         capacity['bitbank']['JPY'],
         capacity['bitbank']['BTC'] + capacity['hitbtc2']['BTC']))
+
+
+def printCapacityDiff(old, new):
+    """資産変化を表示."""
+    print('資産変化 {}XRP {}JPY {}BTC'.format(
+        (new['bitbank']['XRP'] + new['hitbtc2']['XRP'] -
+            old['bitbank']['XRP'] - old['hitbtc2']['XRP']),
+        new['bitbank']['JPY'] - old['bitbank']['JPY'],
+        new['bitbank']['BTC'] - old['hitbtc2']['BTC']))
 
 
 def calcMoney(capacity, value):
