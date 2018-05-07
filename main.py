@@ -40,7 +40,6 @@ def main() -> int:
         except Exception as e:
             print_exc()
             print(e)
-            return 1
             time.sleep(5)
             capacity = fetchCapacity(inited)
             printCapacity(capacity)
