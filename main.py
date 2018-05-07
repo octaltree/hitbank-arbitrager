@@ -18,6 +18,7 @@ def main() -> int:
     inited = init()
     capacity = fetchCapacity(inited)
     printCapacity(capacity)
+    capCount = 0
     while True:
         try:
             # bitbank ETH JP
@@ -27,10 +28,14 @@ def main() -> int:
             newCap = attemptTrade(
                 inited, capacity, value,
                 production=production)
+            if newCap == capacity:
+                capacity = fetchCapacity(inited)
+                capCount = 0
             if newCap != capacity:
                 printCapacityDiff(capacity, newCap)
                 printCapacity(newCap)
                 capacity = newCap
+            capCount += 1
             time.sleep(4)
         except Exception as e:
             print_exc()
