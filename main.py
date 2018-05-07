@@ -131,7 +131,7 @@ def attemptTrade(inited, capacity, value, production=False):
         capacity['bitbank']['BTC'] / pbj / pbx,
         capacity['hitbtc2']['XRP']])
     cap = capS if doTrade == 1 else capB
-    val = min([cap * 0.8, valS if doTrade == 1 else valB])
+    val = min([cap * 0.9, valS if doTrade == 1 else valB])
     if val <= 10:  # TODO 100
         print('  資産')
         print('    hitbtc {}XRP {}BTC={}XRP'.format(
