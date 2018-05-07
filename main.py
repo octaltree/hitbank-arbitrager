@@ -61,7 +61,8 @@ def printCapacityDiff(old, new):
         (new['bitbank']['XRP'] + new['hitbtc2']['XRP'] -
             old['bitbank']['XRP'] - old['hitbtc2']['XRP']),
         new['bitbank']['JPY'] - old['bitbank']['JPY'],
-        new['bitbank']['BTC'] - old['hitbtc2']['BTC']), flush=True)
+        (new['bitbank']['BTC'] + new['hitbtc2']['BTC'] -
+            old['bitbank']['BTC'] - old['hitbtc2']['BTC'])), flush=True)
     subprocess.call('notify-send 資産変化', shell=True)
 
 
