@@ -23,7 +23,7 @@ def main() -> int:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
-            print('評価額{}円'.format(calcMoney(capacity, value)))
+            print('評価額{}円'.format(calcMoney(capacity, value)), flush=True)
             newCap = attemptTrade(
                 inited, capacity, value,
                 production=production)
