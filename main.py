@@ -159,14 +159,13 @@ def attemptTrade(inited, capacity, value, production=False):
             capacity['bitbank']['JPY'] / pbx, capacity['bitbank']['BTC'],
             capacity['bitbank']['BTC'] / pbj / pbx))
         return capacity
-    vbx = round(val, 4)
     vbb = round(val * pbx * pbj, 4)
-    vbj = vbb * pbb
-    vhx = int(round(val, 0))
+    vbx = round(vbb * pbb / pbx, 4)
+    vhx = int(round(vbx, 0))
 
     print('  tradeChance {}XRP'.format(val))
     print('    {}JPYを1JPY{}BTCで{}'.format(
-        vbj, pbj, '売' if doTrade == 1 else '買'))
+        vbb * pbb, pbj, '売' if doTrade == 1 else '買'))
     print('      ={}BTCを1BTC{}JPYで{}'.format(
         vbb, pbb, '買' if doTrade == 1 else '売'))
     print('    {}XRPを1XRP{}JPYで{}'.format(
@@ -175,7 +174,7 @@ def attemptTrade(inited, capacity, value, production=False):
         vhx, phx, '買' if doTrade == 1 else '売'))
     print('    {}XRP {}JPY {}BTC'.format(
         doTrade * (vhx - vbx),
-        doTrade * (vbx * pbx - vbj),
+        doTrade * (vbx * pbx - vbb * pbb),
         doTrade * (vbb - vhx * phx)))
 
     # TODO 売買量をいじって偏りをなおす
