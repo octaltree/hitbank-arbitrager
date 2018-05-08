@@ -40,15 +40,20 @@ def main() -> int:
         except Exception as e:
             print_exc()
             print(e)
-            time.sleep(5)
-            capacity = fetchCapacity(inited)
-            printCapacity(capacity)
+            time.sleep(10)
     return 0
 
 
 def printCapacity(capacity):
     """資産を表示."""
-    print('資産 {}XRP {}JPY {}BTC'.format(
+    print('資産')
+    print('  bitbank {}XRP {}JPY {}BTC'.format(
+        capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
+        capacity['bitbank']['BTC']))
+    print('  hitbtc {}XRP {}JPY {}BTC'.format(
+        capacity['hitbtc']['XRP'], capacity['hitbtc']['JPY'],
+        capacity['hitbtc']['BTC']))
+    print('  計 {}XRP {}JPY {}BTC'.format(
         capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP'],
         capacity['bitbank']['JPY'],
         capacity['bitbank']['BTC'] + capacity['hitbtc2']['BTC']))
