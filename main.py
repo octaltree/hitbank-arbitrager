@@ -16,39 +16,45 @@ def main() -> int:
     production = bool(os.environ.get('production_arbitrager', False))
     print('mode: ' + ('production' if production else 'dry run'))
     inited = init()
-    capacity = fetchCapacity(inited)
-    printCapacity(capacity)
+    capacity = fetchBalance(inited)
+    balance = fetchBalance(inited, funds='total')
+    printBalance(balance)
     capCount = 0
     while True:
         try:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
-            print('評価額{}円'.format(calcMoney(capacity, value)), flush=True)
+            print('評価額{}円'.format(calcMoney(balance, value)), flush=True)
             newCap = attemptTrade(
                 inited, capacity, value,
                 production=production)
-            if newCap == capacity:
-                newCap = fetchCapacity(inited)
+            if newCap == capacity and capCount == 5:
+                newCap = fetchBalance(inited)
                 capCount = 0
             if newCap != capacity:
                 printCapacityDiff(capacity, newCap)
-                printCapacity(newCap)
+                balance = fetchBalance(inited, funds='total')
+                printBalance(balance)
                 capacity = newCap
             capCount += 1
             time.sleep(4)
         except Exception as e:
             print_exc()
             print(e)
-            time.sleep(5)
-            capacity = fetchCapacity(inited)
-            printCapacity(capacity)
+            time.sleep(10)
     return 0
 
 
-def printCapacity(capacity):
+def printBalance(capacity):
     """資産を表示."""
-    print('資産 {}XRP {}JPY {}BTC'.format(
+    print('資産')
+    print('  bitbank {}XRP {}JPY {}BTC'.format(
+        capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
+        capacity['bitbank']['BTC']))
+    print('  hitbtc {}XRP {}BTC'.format(
+        capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC']))
+    print('  計 {}XRP {}JPY {}BTC'.format(
         capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP'],
         capacity['bitbank']['JPY'],
         capacity['bitbank']['BTC'] + capacity['hitbtc2']['BTC']))
@@ -56,12 +62,14 @@ def printCapacity(capacity):
 
 def printCapacityDiff(old, new):
     """資産変化を表示."""
-    print('資産変化 {}XRP {}JPY {}BTC'.format(
-        (new['bitbank']['XRP'] + new['hitbtc2']['XRP'] -
-            old['bitbank']['XRP'] - old['hitbtc2']['XRP']),
-        new['bitbank']['JPY'] - old['bitbank']['JPY'],
-        (new['bitbank']['BTC'] + new['hitbtc2']['BTC'] -
-            old['bitbank']['BTC'] - old['hitbtc2']['BTC'])), flush=True)
+    # new - oldが0であるはずが, 全て足してから全て引くことでは誤差が生じた
+    # 計算順序に気をつける
+    def no(exchange, coin):
+        return new[exchange][coin] - old[exchange][coin]
+    dx = no('bitbank', 'XRP') + no('hitbtc2', 'XRP')
+    dj = no('bitbank', 'JPY')
+    db = no('bitbank', 'BTC') + no('hitbtc2', 'BTC')
+    print('資産変化 {}XRP {}JPY {}BTC'.format(dx, dj, db), flush=True)
     subprocess.call('notify-send 資産変化', shell=True)
 
 
@@ -204,7 +212,7 @@ def attemptTrade(inited, capacity, value, production=False):
             hx = inited['hitbtc2'].create_market_sell_order('XRP/BTC', vhx)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
             print(res)
-    return fetchCapacity(inited)
+    return fetchBalance(inited)
 
 
 # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
@@ -258,13 +266,13 @@ def calcSellingTwice(bid1, bid2, ask3, threshold):
     return (ratio, value, bid1[idx[0], 0], bid2[idx[1], 0], ask3[idx[2], 0])
 
 
-def fetchCapacity(inited):
-    """余力取得."""
+def fetchBalance(inited, funds='free'):
+    """資金取得."""
     el = asyncio.get_event_loop()
     cap = el.run_until_complete(asyncio.gather(
         inited['hitbtc2'].fetch_balance(),
         inited['bitbank'].fetch_balance()))
-    newCap = {'hitbtc2': cap[0]['free'], 'bitbank': cap[1]['free']}
+    newCap = {'hitbtc2': cap[0][funds], 'bitbank': cap[1][funds]}
     return newCap
 
 
