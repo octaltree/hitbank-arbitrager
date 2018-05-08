@@ -16,8 +16,8 @@ def main() -> int:
     production = bool(os.environ.get('production_arbitrager', False))
     print('mode: ' + ('production' if production else 'dry run'))
     inited = init()
-    capacity = fetchCapacity(inited)
-    printCapacity(capacity)
+    capacity = fetchBalance(inited)
+    printBalance(fetchBalance(inited, funds='total'))
     capCount = 0
     while True:
         try:
@@ -28,12 +28,12 @@ def main() -> int:
             newCap = attemptTrade(
                 inited, capacity, value,
                 production=production)
-            if newCap == capacity:
-                newCap = fetchCapacity(inited)
+            if newCap == capacity and capCount == 5:
+                newCap = fetchBalance(inited)
                 capCount = 0
             if newCap != capacity:
                 printCapacityDiff(capacity, newCap)
-                printCapacity(newCap)
+                printBalance(fetchBalance(inited, funds='total'))
                 capacity = newCap
             capCount += 1
             time.sleep(4)
@@ -44,7 +44,7 @@ def main() -> int:
     return 0
 
 
-def printCapacity(capacity):
+def printBalance(capacity):
     """資産を表示."""
     print('資産')
     print('  bitbank {}XRP {}JPY {}BTC'.format(
@@ -210,7 +210,7 @@ def attemptTrade(inited, capacity, value, production=False):
             hx = inited['hitbtc2'].create_market_sell_order('XRP/BTC', vhx)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
             print(res)
-    return fetchCapacity(inited)
+    return fetchBalance(inited)
 
 
 # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
@@ -264,13 +264,13 @@ def calcSellingTwice(bid1, bid2, ask3, threshold):
     return (ratio, value, bid1[idx[0], 0], bid2[idx[1], 0], ask3[idx[2], 0])
 
 
-def fetchCapacity(inited):
-    """余力取得."""
+def fetchBalance(inited, funds='free'):
+    """資金取得."""
     el = asyncio.get_event_loop()
     cap = el.run_until_complete(asyncio.gather(
         inited['hitbtc2'].fetch_balance(),
         inited['bitbank'].fetch_balance()))
-    newCap = {'hitbtc2': cap[0]['free'], 'bitbank': cap[1]['free']}
+    newCap = {'hitbtc2': cap[0][funds], 'bitbank': cap[1][funds]}
     return newCap
 
 
