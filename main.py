@@ -50,9 +50,8 @@ def printCapacity(capacity):
     print('  bitbank {}XRP {}JPY {}BTC'.format(
         capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
         capacity['bitbank']['BTC']))
-    print('  hitbtc {}XRP {}JPY {}BTC'.format(
-        capacity['hitbtc']['XRP'], capacity['hitbtc']['JPY'],
-        capacity['hitbtc']['BTC']))
+    print('  hitbtc {}XRP {}BTC'.format(
+        capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC']))
     print('  計 {}XRP {}JPY {}BTC'.format(
         capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP'],
         capacity['bitbank']['JPY'],
