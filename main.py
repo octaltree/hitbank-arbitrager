@@ -17,14 +17,15 @@ def main() -> int:
     print('mode: ' + ('production' if production else 'dry run'))
     inited = init()
     capacity = fetchBalance(inited)
-    printBalance(fetchBalance(inited, funds='total'))
+    balance = fetchBalance(inited, funds='total')
+    printBalance(balance)
     capCount = 0
     while True:
         try:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
-            print('評価額{}円'.format(calcMoney(capacity, value)), flush=True)
+            print('評価額{}円'.format(calcMoney(balance, value)), flush=True)
             newCap = attemptTrade(
                 inited, capacity, value,
                 production=production)
@@ -33,7 +34,8 @@ def main() -> int:
                 capCount = 0
             if newCap != capacity:
                 printCapacityDiff(capacity, newCap)
-                printBalance(fetchBalance(inited, funds='total'))
+                balance = fetchBalance(inited, funds='total')
+                printBalance(balance)
                 capacity = newCap
             capCount += 1
             time.sleep(4)
