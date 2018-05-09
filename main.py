@@ -64,11 +64,11 @@ def printCapacityDiff(old, new):
     """資産変化を表示."""
     # new - oldが0であるはずが, 全て足してから全て引くことでは誤差が生じた
     # 計算順序に気をつける
-    def no(exchange, coin):
+    def diff(exchange, coin):
         return new[exchange][coin] - old[exchange][coin]
-    dx = no('bitbank', 'XRP') + no('hitbtc2', 'XRP')
-    dj = no('bitbank', 'JPY')
-    db = no('bitbank', 'BTC') + no('hitbtc2', 'BTC')
+    dx = diff('bitbank', 'XRP') + diff('hitbtc2', 'XRP')
+    dj = diff('bitbank', 'JPY')
+    db = diff('bitbank', 'BTC') + diff('hitbtc2', 'BTC')
     print('資産変化 {}XRP {}JPY {}BTC'.format(dx, dj, db), flush=True)
     subprocess.call('notify-send 資産変化', shell=True)
 
@@ -124,7 +124,7 @@ def attemptTrade(inited, capacity, value, production=False):
     # XRPの枚数で取引量を示す
     # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
     # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
-    thresholdS = 1.006
+    thresholdS = 1.008
     thresholdB = 1.006
     (ratioS, valS, pbjS, pbxS, phxS) = calcSellingTwice(
         bitbankJpy['bids'],
@@ -157,7 +157,7 @@ def attemptTrade(inited, capacity, value, production=False):
         capacity['hitbtc2']['XRP']])
     cap = capS if doTrade == 1 else capB
     val = min([cap * 0.9, valS if doTrade == 1 else valB])
-    if val <= 10:  # TODO 100
+    if val <= 50:  # TODO 100
         print('  資産')
         print('    hitbtc {}XRP {}BTC={}XRP'.format(
             capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC'],
