@@ -64,11 +64,11 @@ def printCapacityDiff(old, new):
     """資産変化を表示."""
     # new - oldが0であるはずが, 全て足してから全て引くことでは誤差が生じた
     # 計算順序に気をつける
-    def no(exchange, coin):
+    def diff(exchange, coin):
         return new[exchange][coin] - old[exchange][coin]
-    dx = no('bitbank', 'XRP') + no('hitbtc2', 'XRP')
-    dj = no('bitbank', 'JPY')
-    db = no('bitbank', 'BTC') + no('hitbtc2', 'BTC')
+    dx = diff('bitbank', 'XRP') + diff('hitbtc2', 'XRP')
+    dj = diff('bitbank', 'JPY')
+    db = diff('bitbank', 'BTC') + diff('hitbtc2', 'BTC')
     print('資産変化 {}XRP {}JPY {}BTC'.format(dx, dj, db), flush=True)
     subprocess.call('notify-send 資産変化', shell=True)
 
