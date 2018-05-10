@@ -44,6 +44,7 @@ def main() -> int:
                 newCap = fetchBalance(inited)
                 capCount = 0
             if newCap != capacity:
+                log('@channel')
                 printCapacityDiff(capacity, newCap)
                 balance = fetchBalance(inited, funds='total')
                 printBalance(balance)
