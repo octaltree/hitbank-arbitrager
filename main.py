@@ -8,13 +8,24 @@ import time
 import asyncio
 import numpy as np
 import subprocess
+import slackweb
 from traceback import print_exc
+
+slack = slackweb.Slack(
+    url="https://hooks.slack.com/services" +
+    "/T3BHKTNNM/BAM3F7LVA/GLLeXG3CC5qDxC2baFcYsUoP")
+
+
+def log(s):
+    """ログ出力."""
+    # print(s, flush=True)
+    slack.notify(text=s)
 
 
 def main() -> int:
     """main."""
     production = bool(os.environ.get('production_arbitrager', False))
-    print('mode: ' + ('production' if production else 'dry run'))
+    log('mode: ' + ('production' if production else 'dry run'))
     inited = init()
     capacity = fetchBalance(inited)
     balance = fetchBalance(inited, funds='total')
@@ -25,7 +36,7 @@ def main() -> int:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
-            print('評価額{}円'.format(calcMoney(balance, value)), flush=True)
+            log('評価額{}円'.format(calcMoney(balance, value)))
             newCap = attemptTrade(
                 inited, capacity, value,
                 production=production)
@@ -41,20 +52,20 @@ def main() -> int:
             time.sleep(4)
         except Exception as e:
             print_exc()
-            print(e)
+            log(e)
             time.sleep(10)
     return 0
 
 
 def printBalance(capacity):
     """資産を表示."""
-    print('資産')
-    print('  bitbank {}XRP {}JPY {}BTC'.format(
+    log('資産')
+    log('  bitbank {}XRP {}JPY {}BTC'.format(
         capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
         capacity['bitbank']['BTC']))
-    print('  hitbtc {}XRP {}BTC'.format(
+    log('  hitbtc {}XRP {}BTC'.format(
         capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC']))
-    print('  計 {}XRP {}JPY {}BTC'.format(
+    log('  計 {}XRP {}JPY {}BTC'.format(
         capacity['bitbank']['XRP'] + capacity['hitbtc2']['XRP'],
         capacity['bitbank']['JPY'],
         capacity['bitbank']['BTC'] + capacity['hitbtc2']['BTC']))
@@ -69,7 +80,7 @@ def printCapacityDiff(old, new):
     dx = diff('bitbank', 'XRP') + diff('hitbtc2', 'XRP')
     dj = diff('bitbank', 'JPY')
     db = diff('bitbank', 'BTC') + diff('hitbtc2', 'BTC')
-    print('資産変化 {}XRP {}JPY {}BTC'.format(dx, dj, db), flush=True)
+    log('資産変化 {}XRP {}JPY {}BTC'.format(dx, dj, db))
     subprocess.call('notify-send 資産変化', shell=True)
 
 
@@ -134,7 +145,7 @@ def attemptTrade(inited, capacity, value, production=False):
         bitbankJpy['asks'],
         bitbankXrp['asks'],
         hitbtc2['bids'], thresholdB)
-    print((ratioS, valS, ratioB, valB))
+    log((ratioS, valS, ratioB, valB))
     doTrade = (
         1 if ratioS >= thresholdS else  # 2回売る
         -1 if ratioB >= thresholdB else  # 2回買う
@@ -158,11 +169,11 @@ def attemptTrade(inited, capacity, value, production=False):
     cap = capS if doTrade == 1 else capB
     val = min([cap * 0.9, valS if doTrade == 1 else valB])
     if val <= 50:  # TODO 100
-        print('  資産')
-        print('    hitbtc {}XRP {}BTC={}XRP'.format(
+        log('  資産')
+        log('    hitbtc {}XRP {}BTC={}XRP'.format(
             capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC'],
             capacity['hitbtc2']['BTC'] / phx))
-        print('    bitbank {}XRP {}JPY={}XRP {}BTC={}XRP'.format(
+        log('    bitbank {}XRP {}JPY={}XRP {}BTC={}XRP'.format(
             capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
             capacity['bitbank']['JPY'] / pbx, capacity['bitbank']['BTC'],
             capacity['bitbank']['BTC'] / pbj / pbx))
@@ -171,25 +182,25 @@ def attemptTrade(inited, capacity, value, production=False):
     vbx = round(vbb * pbb / pbx, 4)
     vhx = int(round(vbx, 0))
 
-    print('  tradeChance {}XRP'.format(val))
-    print('    {}JPYを1JPY{}BTCで{}'.format(
+    log('  tradeChance {}XRP'.format(val))
+    log('    {}JPYを1JPY{}BTCで{}'.format(
         vbb * pbb, pbj, '売' if doTrade == 1 else '買'))
-    print('      ={}BTCを1BTC{}JPYで{}'.format(
+    log('      ={}BTCを1BTC{}JPYで{}'.format(
         vbb, pbb, '買' if doTrade == 1 else '売'))
-    print('    {}XRPを1XRP{}JPYで{}'.format(
+    log('    {}XRPを1XRP{}JPYで{}'.format(
         vbx, pbx, '売' if doTrade == 1 else '買'))
-    print('    {}XRPを1XRP{}BTCで{}'.format(
+    log('    {}XRPを1XRP{}BTCで{}'.format(
         vhx, phx, '買' if doTrade == 1 else '売'))
-    print('    {}XRP {}JPY {}BTC'.format(
+    log('    {}XRP {}JPY {}BTC'.format(
         doTrade * (vhx - vbx),
         doTrade * (vbx * pbx - vbb * pbb),
         doTrade * (vbb - vhx * phx)))
 
     # TODO 売買量をいじって偏りをなおす
     if doTrade == 1:  # 2回売る
-        print('sell bitbank XRP/JPY {}XRP {}JPY per XRP'.format(vbx, pbx))
-        print('buy bitbank BTC/JPY {}BTC {}JPY per BTC'.format(vbb, pbb))
-        print('buy hitbtc2 XRP/BTC {}XRP'.format(vhx))
+        log('sell bitbank XRP/JPY {}XRP {}JPY per XRP'.format(vbx, pbx))
+        log('buy bitbank BTC/JPY {}BTC {}JPY per BTC'.format(vbb, pbb))
+        log('buy hitbtc2 XRP/BTC {}XRP'.format(vhx))
         if production:
             el = asyncio.get_event_loop()
             bx = inited['bitbank'].create_order(
@@ -198,11 +209,11 @@ def attemptTrade(inited, capacity, value, production=False):
                 'BTC/JPY', 'market', 'buy', vbb, pbb)
             hx = inited['hitbtc2'].create_market_buy_order('XRP/BTC', vhx)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
-            print(res)
+            log(res)
     elif doTrade == -1:  # 2回買う
-        print('buy bitbank XRP/JPY {}XRP {}JPY per XRP'.format(vbx, pbx))
-        print('sell bitbank BTC/JPY {}BTC {}JPY per BTC'.format(vbb, pbb))
-        print('sell hitbtc2 XRP/BTC {}XRP'.format(vhx))
+        log('buy bitbank XRP/JPY {}XRP {}JPY per XRP'.format(vbx, pbx))
+        log('sell bitbank BTC/JPY {}BTC {}JPY per BTC'.format(vbb, pbb))
+        log('sell hitbtc2 XRP/BTC {}XRP'.format(vhx))
         if production:
             el = asyncio.get_event_loop()
             bx = inited['bitbank'].create_order(
@@ -211,7 +222,7 @@ def attemptTrade(inited, capacity, value, production=False):
                 'BTC/JPY', 'market', 'sell', vbb, pbb)
             hx = inited['hitbtc2'].create_market_sell_order('XRP/BTC', vhx)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
-            print(res)
+            log(res)
     return fetchBalance(inited)
 
 
