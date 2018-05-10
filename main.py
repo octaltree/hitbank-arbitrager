@@ -8,7 +8,7 @@ import time
 import asyncio
 import numpy as np
 import slackweb
-from traceback import print_exc
+import traceback
 
 slack = slackweb.Slack(
     url="https://hooks.slack.com/services" +
@@ -51,7 +51,7 @@ def main() -> int:
             capCount += 1
             time.sleep(4)
         except Exception as e:
-            print_exc()
+            log(traceback.format_exc())
             log(e)
             time.sleep(10)
     return 0
