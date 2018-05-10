@@ -2,3 +2,4 @@ ccxt
 python-dotenv
 numpy
 aiohttp
+slackweb
