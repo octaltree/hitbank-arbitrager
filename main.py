@@ -7,7 +7,6 @@ import ccxt.async as ccxt
 import time
 import asyncio
 import numpy as np
-import subprocess
 import slackweb
 from traceback import print_exc
 
