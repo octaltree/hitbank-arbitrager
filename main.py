@@ -26,30 +26,29 @@ def main() -> int:
     production = bool(os.environ.get('production_arbitrager', False))
     log('mode: ' + ('production' if production else 'dry run'))
     inited = init()
-    capacity = fetchBalance(inited)
-    balance = fetchBalance(inited, funds='total')
-    printBalance(balance)
-    capCount = 0
+    capacity = None
+    cooldown = 1
     while True:
         try:
             # bitbank ETH JP
             # hitbtc ETH BTC(bitbankのBTC/JPで換算)
             value = fetchValue(inited)
-            log('評価額{}円'.format(calcMoney(balance, value)))
-            newCap = attemptTrade(
-                inited, capacity, value,
-                production=production)
-            if newCap == capacity and capCount == 5:
-                newCap = fetchBalance(inited)
-                capCount = 0
+            if cooldown <= 0:
+                traded = attemptTrade(
+                    inited, capacity, value,
+                    production=production)
+                if traded:
+                    cooldown = 3
+                    log('@channel')
+            newCap = fetchBalance(inited)
             if newCap != capacity:
-                log('@channel')
                 printCapacityDiff(capacity, newCap)
                 balance = fetchBalance(inited, funds='total')
                 printBalance(balance)
+                log('評価額{}円'.format(calcMoney(balance, value)))
                 capacity = newCap
-            capCount += 1
             time.sleep(4)
+            cooldown -= 1
         except Exception as e:
             log(traceback.format_exc())
             log(e)
@@ -76,6 +75,8 @@ def printCapacityDiff(old, new):
     # 計算順序に気をつける
     def diff(exchange, coin):
         return new[exchange][coin] - old[exchange][coin]
+    if old is None:
+        return None
     dx = diff('bitbank', 'XRP') + diff('hitbtc2', 'XRP')
     dj = diff('bitbank', 'JPY')
     db = diff('bitbank', 'BTC') + diff('hitbtc2', 'BTC')
@@ -149,7 +150,7 @@ def attemptTrade(inited, capacity, value, production=False):
         -1 if ratioB >= thresholdB else  # 2回買う
         0)
     if not doTrade:
-        return capacity
+        return False
 
     # 指値価格
     pbj = pbjS if doTrade == 1 else pbjB  # pbj BTC per JPY in bitbank
@@ -177,7 +178,7 @@ def attemptTrade(inited, capacity, value, production=False):
                 capacity['bitbank']['JPY'] / pbx, capacity['bitbank']['BTC'],
                 capacity['bitbank']['BTC'] / pbj / pbx)])
         log(s)
-        return capacity
+        return False
     vbb = round(val * pbx * pbj, 4)
     vbx = round(vbb * pbb / pbx, 4)
     vhx = int(round(vbx, 0))
@@ -226,7 +227,7 @@ def attemptTrade(inited, capacity, value, production=False):
             hx = inited['hitbtc2'].create_market_sell_order('XRP/BTC', vhx)
             res = el.run_until_complete(asyncio.gather(bx, bj, hx))
             log(res)
-    return fetchBalance(inited)
+    return True
 
 
 # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
