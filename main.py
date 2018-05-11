@@ -135,7 +135,7 @@ def attemptTrade(inited, capacity, value, production=False):
     # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
     # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
     thresholdS = 1.006
-    thresholdB = 1.003
+    thresholdB = 1.006
     (ratioS, valS, pbjS, pbxS, phxS) = calcSellingTwice(
         bitbankJpy['bids'],
         bitbankXrp['bids'],
