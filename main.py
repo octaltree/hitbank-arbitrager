@@ -38,7 +38,7 @@ def main() -> int:
                     inited, capacity, value,
                     production=production)
                 if traded:
-                    cooldown = 3
+                    cooldown = 15
                     log('@channel')
             newCap = fetchBalance(inited)
             if newCap != capacity:
@@ -52,12 +52,15 @@ def main() -> int:
         except Exception as e:
             log(traceback.format_exc())
             log(e)
+            printBalance(capacity)
             time.sleep(10)
     return 0
 
 
 def printBalance(capacity):
     """資産を表示."""
+    if capacity is None:
+        return
     b = capacity['bitbank']
     h = capacity['hitbtc2']
     s = '\n'.join([
