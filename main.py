@@ -172,14 +172,14 @@ def attemptTrade(inited, capacity, value, production=False):
     val = min([cap * 0.79, valS if doTrade == 1 else valB])
     if val < 50:
         s = '\n'.join([
-            '  資産',
-            '    hitbtc {}XRP {}BTC={}XRP'.format(
-                capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC'],
-                capacity['hitbtc2']['BTC'] / phx),
+            '  元手不足',
             '    bitbank {}XRP {}JPY={}XRP {}BTC={}XRP'.format(
                 capacity['bitbank']['XRP'], capacity['bitbank']['JPY'],
                 capacity['bitbank']['JPY'] / pbx, capacity['bitbank']['BTC'],
-                capacity['bitbank']['BTC'] / pbj / pbx)])
+                capacity['bitbank']['BTC'] / pbj / pbx),
+            '    hitbtc {}XRP {}BTC={}XRP'.format(
+                capacity['hitbtc2']['XRP'], capacity['hitbtc2']['BTC'],
+                capacity['hitbtc2']['BTC'] / phx)])
         log(s)
         return False
     vbb = round(val * pbx, pbj, 4)
