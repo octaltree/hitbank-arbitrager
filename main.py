@@ -38,7 +38,7 @@ def main() -> int:
                     inited, capacity, value,
                     production=production)
                 if traded:
-                    cooldown = 15
+                    cooldown = 4
                     log('@channel')
             newCap = fetchBalance(inited)
             if newCap != capacity:
@@ -137,7 +137,7 @@ def attemptTrade(inited, capacity, value, production=False):
     # XRPの枚数で取引量を示す
     # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
     # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
-    thresholdS = 1.008
+    thresholdS = 1.0065
     thresholdB = 1.006
     (ratioS, valS, pbjS, pbxS, phxS) = calcSellingTwice(
         bitbankJpy['bids'],
@@ -169,7 +169,7 @@ def attemptTrade(inited, capacity, value, production=False):
         capacity['bitbank']['BTC'] / pbj / pbx,
         capacity['hitbtc2']['XRP']])
     cap = capS if doTrade == 1 else capB
-    val = min([cap * 0.8, valS if doTrade == 1 else valB])
+    val = min([cap * 0.79, valS if doTrade == 1 else valB])
     if val < 50:
         s = '\n'.join([
             '  資産',
@@ -182,7 +182,7 @@ def attemptTrade(inited, capacity, value, production=False):
                 capacity['bitbank']['BTC'] / pbj / pbx)])
         log(s)
         return False
-    vbb = round(val * pbx * pbj, 4)
+    vbb = round(val * pbx, pbj, 4)
     vbx = round(vbb * pbb / pbx, 4)
     vhx = int(round(vbx, 0))
 
