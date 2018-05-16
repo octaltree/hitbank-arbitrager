@@ -182,7 +182,7 @@ def attemptTrade(inited, capacity, value, production=False):
                 capacity['hitbtc2']['BTC'] / phx)])
         log(s)
         return False
-    vbb = round(val * pbx, pbj, 4)
+    vbb = round(val * pbx * pbj, 4)
     vbx = round(vbb * pbb / pbx, 4)
     vhx = int(round(vbx, 0))
 
