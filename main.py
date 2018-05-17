@@ -137,7 +137,7 @@ def attemptTrade(inited, capacity, value, production=False):
     # XRPの枚数で取引量を示す
     # 1: BASE2/BASE1, 2: ALT/BASE2, 3: ALT/BASE1
     # 1: JPY/BTC, 2: XRP/JPY, 3: XRP/BTC
-    thresholdS = 1.007
+    thresholdS = 1.005
     thresholdB = 1.003
     (ratioS, valS, pbjS, pbxS, phxS) = calcSellingTwice(
         bitbankJpy['bids'],
