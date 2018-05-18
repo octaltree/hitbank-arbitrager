@@ -17,7 +17,7 @@ slack = slackweb.Slack(
 
 def log(s):
     """ログ出力."""
-    # print(s, flush=True)
+    print(s, flush=True)
     slack.notify(text=str(s))
 
 
