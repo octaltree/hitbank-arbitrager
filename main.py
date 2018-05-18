@@ -9,7 +9,7 @@ import asyncio
 import numpy as np
 import slackweb
 import traceback
-import datetime
+from datetime import datetime, timedelta, timezone
 
 slack = slackweb.Slack(
     url="https://hooks.slack.com/services" +
@@ -25,9 +25,10 @@ def log(s):
 def main() -> int:
     """main."""
     production = bool(os.environ.get('production_arbitrager', False))
+    started = datetime.now(timezone(timedelta(hours=+9), 'JST'))
     log('\n'.join([
         'mode: ' + ('production' if production else 'dry run'),
-        datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")]))
+        started.strftime("%Y/%m/%d %H:%M:%S")]))
     inited = init()
     capacity = None
     cooldown = 1
