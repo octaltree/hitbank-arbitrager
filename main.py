@@ -43,7 +43,6 @@ def main() -> int:
                     production=production)
                 if traded:
                     cooldown = 4
-                    log('@channel')
             newCap = fetchBalance(inited)
             if newCap != capacity:
                 printCapacityDiff(capacity, newCap)
@@ -54,6 +53,7 @@ def main() -> int:
             time.sleep(4)
             cooldown -= 1
         except Exception as e:
+            log('エラー')
             log(traceback.format_exc())
             log(e)
             printBalance(capacity)
