@@ -173,7 +173,9 @@ def attemptTrade(inited, capacity, value, production=False):
         capacity['bitbank']['BTC'] / pbj / pbx,
         capacity['hitbtc2']['XRP']])
     cap = capS if doTrade == 1 else capB
-    val = min([cap * 0.79, valS if doTrade == 1 else valB])
+    val = min([
+        cap * (0.79 if doTrade == 1 else 0.69),
+        valS if doTrade == 1 else valB])
     if val < 50:
         s = '\n'.join([
             '  元手不足',
