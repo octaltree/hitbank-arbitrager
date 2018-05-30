@@ -23,9 +23,15 @@ def main() -> int:
     el = asyncio.get_event_loop()
     bs = el.run_until_complete(
         asyncio.gather(*[t.fetch_balance() for t in ts]))
-    el.run_until_complete(asyncio.gather(*[t.close() for t in ts]))
     cbs = [sum([b['total'].get(c, 0) for b in bs]) for c in cs]
-    print(' '.join([str(cb) for cb in cbs]))
+    lightning = el.run_until_complete(bitflyer.fetch2(
+        path='getcollateral', api='private', method='GET'))
+    el.run_until_complete(asyncio.gather(*[t.close() for t in ts]))
+    added = [
+        cbs[0],
+        cbs[1] + lightning['collateral'] + lightning['open_position_pnl'],
+        cbs[2]]
+    print(' '.join([str(x) for x in added]))
     return 0
 
 
