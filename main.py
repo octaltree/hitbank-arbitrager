@@ -176,7 +176,7 @@ def attemptTrade(inited, capacity, value, production=False):
     val = min([
         cap * (0.79 if doTrade == 1 else 0.69),
         valS if doTrade == 1 else valB])
-    if val < 50:
+    if val < 70:
         s = '\n'.join([
             '  元手不足',
             '    bitbank {}XRP {}JPY={}XRP {}BTC={}XRP'.format(
