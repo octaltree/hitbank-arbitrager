@@ -42,7 +42,7 @@ def main() -> int:
                     inited, capacity, value,
                     production=production)
                 if traded:
-                    cooldown = 4
+                    cooldown = 15
             newCap = fetchBalance(inited)
             if newCap != capacity:
                 printCapacityDiff(capacity, newCap)
