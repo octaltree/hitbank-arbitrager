@@ -14,8 +14,8 @@ def main() -> int:
         'apiKey': os.environ.get('hitbtc2_key'),
         'secret': os.environ.get('hitbtc2_secret')})
     bitbank = ccxt.bitbank({
-        'apiKey': os.environ.get('bitbank_key2'),
-        'secret': os.environ.get('bitbank_secret2')})
+        'apiKey': os.environ.get('bitbank_key'),
+        'secret': os.environ.get('bitbank_secret')})
     bitflyer = ccxt.bitflyer({
         'apiKey': os.environ.get('bitflyer_key'),
         'secret': os.environ.get('bitflyer_secret')})
