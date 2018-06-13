@@ -11,9 +11,9 @@ import slackweb
 import traceback
 from datetime import datetime, timedelta, timezone
 
-slack = slackweb.Slack(
-    url="https://hooks.slack.com/services" +
-    "/T3BHKTNNM/BAM3F7LVA/GLLeXG3CC5qDxC2baFcYsUoP")
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+dotenv.load_dotenv(dotenv_path)
+slack = slackweb.Slack(url=os.environ.get('slack_url'))
 
 
 def log(s):
@@ -103,8 +103,6 @@ def calcMoney(capacity, value):
 
 def init():
     """apiなど初期化."""
-    dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-    dotenv.load_dotenv(dotenv_path)
     hitbtc2 = ccxt.hitbtc2({
         'apiKey': os.environ.get('hitbtc2_key'),
         'secret': os.environ.get('hitbtc2_secret')})
