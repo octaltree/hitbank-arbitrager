@@ -1,4 +1,4 @@
-# hitbtc-arbitrager
+# hitbank-arbitrager
 hitbtcが逝ったので公開(恨金融庁)
 
 ## 知見
