@@ -1,3 +1,8 @@
+# hitbtc-arbitrager
+hitbtcが逝ったので公開(恨金融庁)
+
+## 知見
+* 利ざや6%, 3%で日に0回~10回の裁定機会があった
 * bitbankでccxtがordered_atを1000倍しているが, 必要ないためなおす必要
   - ccxt.asyncも
 * hitbtcでXRP/BTCの取引単位が1XRPなので, 四捨五入しても最大0.5XRP余計に取引してしまう
