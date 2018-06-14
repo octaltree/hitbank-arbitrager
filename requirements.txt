@@ -3,3 +3,4 @@ python-dotenv
 numpy
 aiohttp
 slackweb
+slack_log_handler

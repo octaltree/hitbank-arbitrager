@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
+"""現時点所有資産."""
 import os
 import os.path
 import dotenv
 import ccxt.async as ccxt
 import asyncio
+import logging
+from slack_log_handler import SlackLogHandler
 
 
 def main() -> int:
+    """main."""
     dotenv_path = os.path.join(os.path.dirname(__file__), '../.env')
     dotenv.load_dotenv(dotenv_path)
+    logger = initLogger(slackUrl=os.environ.get('slack_url'))
     cs = ['XRP', 'JPY', 'BTC']
     hitbtc2 = ccxt.hitbtc2({
         'apiKey': os.environ.get('hitbtc2_key'),
@@ -38,8 +43,49 @@ def main() -> int:
         added[0] * val[0]['bids'][0][0] +
         added[1] +
         added[2] * val[1]['bids'][0][0])
-    print(p)
+    logger.info(p)
     return 0
+
+
+def initLogger(slackUrl=None):
+    """Return logger."""
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+    #
+    stream = logging.StreamHandler()
+    stream.setLevel(logging.INFO)
+    stream.setFormatter(formatter)
+    logger.addHandler(stream)
+    #
+    if slackUrl is not None and len(slackUrl) > 0:
+        slack = SlackLogHandler(
+            slackUrl,
+            username='資産',
+            emojis={
+                logging.INFO: ':grinning:',
+                logging.WARNING: ':white_frowning_face:',
+                logging.ERROR: ':persevere:',
+                logging.CRITICAL: ':confounded:',
+            })
+        slack.setLevel(logging.INFO)
+        slack.setFormatter(formatter)
+        logger.addHandler(slack)
+    return logger
+
+
+def initExchange(logger):
+    """Return set of exchange."""
+    bitflyer = ccxt.bitflyer({
+        'apiKey': os.environ.get('bitflyer_key'),
+        'secret': os.environ.get('bitflyer_secret')})
+    bitbank = ccxt.bitbank({
+        'apiKey': os.environ.get('bitbank_key'),
+        'secret': os.environ.get('bitbank_secret')})
+    bitbank2 = ccxt.bitbank({
+        'apiKey': os.environ.get('bitbank_key2'),
+        'secret': os.environ.get('bitbank_secret2')})
+    return {'bitflyer': bitflyer, 'bitbank': bitbank, 'bitbank2': bitbank2}
 
 
 if __name__ == "__main__":
